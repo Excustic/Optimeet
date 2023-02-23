@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using static Optimeet.Meeting;
 
 namespace Optimeet
 {
@@ -16,10 +18,14 @@ namespace Optimeet
         {
             InitializeComponent();
             helper = GeocodeHelper.GetInstance();
-            Location l = new Location();
-            l.Latitude = 32.064230f;
-            l.Longitude = 34.777988f;
-            helper.TopNLocations(l, 10, "restaurant");
+            Date d = new Date { Day=2, Month=5, Year=2023, Hour=21, Minute=30};
+            List<Person> p = new List<Person>();
+            p.Add(new Person("Ben", new Location { Latitude = 32.0267904f, Longitude = 34.7579567f }));
+            p.Add(new Person("Michael", new Location { Latitude = 32.0496376f, Longitude = 34.8059143f }));
+            p.Add(new Person("Leon", new Location { Latitude = 31.9770394f, Longitude = 34.7695861f }));
+            p.Add(new Person("Evgeniy", new Location { Latitude = 32.432225f, Longitude = 34.920580f }));
+            Meeting m = new Meeting("Ben's birthday", d, p);
+            m.SuggestLocations("Restaurant");
         }
 
         private void ComboBoxStartUpHrs(object sender, RoutedEventArgs e)

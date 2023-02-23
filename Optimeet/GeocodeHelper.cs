@@ -1,6 +1,8 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -13,6 +15,8 @@ namespace Optimeet
         private static string baseUrlPR = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?keyword={0}&location={1},{2}&radius={3}&key=" + GKey;
         const string ApiKey = "2b06ea680225d5c6118150af3a7add6a";
         const string GKey = "AIzaSyCBv1-o_dBlNgVaX22qMTN-qwRRzCufkrM";
+        const string ReviewCount = "user_ratings_total";
+        const string ratings = "rating";
 
         private GeocodeHelper() { }
         private static GeocodeHelper _instance;
@@ -41,40 +45,71 @@ namespace Optimeet
             string url = string.Format(baseUrlPR, filter, l.Latitude, l.Longitude, radius);
             string Response = await GetAsync(url);
             JObject res = JsonConvert.DeserializeObject<JObject>(Response);
-            int N = res["results"].Count();
-            if (N > NumOfResults)
-                while (N > NumOfResults && radius > 120)
-                {
-                    radius *= 0.8;
-                    url = string.Format(baseUrlPR, filter, l.Latitude, l.Longitude, radius);
-                    Response = await GetAsync(url);
-                    res = JsonConvert.DeserializeObject<JObject>(Response);
-                    N = res["results"].Count();
-                }
-            else if (N == 0)
+            Location[] Reccomendations = GetPlaces(res);
+            if (Reccomendations.Length < NumOfResults)
             {
-                while (N == 0 && radius < 20000)
+                while (Reccomendations.Length == 0 && radius < 20000)
                 {
                     radius *= 1.5;
                     url = string.Format(baseUrlPR, filter, l.Latitude, l.Longitude, radius);
                     Response = await GetAsync(url);
                     res = JsonConvert.DeserializeObject<JObject>(Response);
-                    N = res["results"].Count();
+                    Reccomendations = GetPlaces(res);
                 }
-
             }
-            Location[] suggestions = new Location[3];
-            for (int i = 0; i < N; i++)
-            {
-                JObject j = JsonConvert.DeserializeObject<JObject>(res["results"][i].ToString());
-                suggestions[i].Latitude = float.Parse(j["geometry"]["location"]["lat"].ToString());
-                suggestions[i].Longitude = float.Parse(j["geometry"]["location"]["lng"].ToString());
-                suggestions[i].Address = j["vicinity"].ToString();
-                suggestions[i].PhotoReference = j["reference"].ToString();
-                suggestions[i].Name = j["name"].ToString();
-            }
-            return suggestions;
+            if (Reccomendations.Length > NumOfResults)
+                Reccomendations = SortPlacesByDistance(Reccomendations, l, NumOfResults);
+            return Reccomendations;
         }
+
+        private Location[] SortPlacesByDistance(Location[] reccomendations, Location Centroid, int numOfResults)
+        {
+            Dictionary<double, Location> d = new Dictionary<double, Location>();
+            double[] dist = new double[reccomendations.Length];
+            for (int i = 0; i < reccomendations.Length; i++)
+            {
+                dist[i] = reccomendations[i].DistanceTo(Centroid);
+                d.Add(dist[i], reccomendations[i]);
+            }
+            Array.Sort(dist);
+            Location[] TopN = new Location[numOfResults];
+            for (int i = 0; i < TopN.Length; i++)
+            {
+                TopN[i] = d[dist[i]];
+            }
+            return TopN;
+        }
+
+        private Location[] GetPlaces(JObject LocationsJson)
+        {
+            Location[] temp = new Location[LocationsJson["results"].Count()];
+            JArray Locations = (JArray)LocationsJson["results"];
+            int open = 0;
+            for (int i = 0; i < temp.Length; i++)
+            {
+                JObject j = JsonConvert.DeserializeObject<JObject>(Locations[i].ToString());
+                if (j[ratings]!=null && j[ReviewCount]!=null && double.Parse(j[ratings].ToString()) >= 3 && int.Parse(j[ReviewCount].ToString()) > 40)
+                    temp[open++] = ConvertJsonToLocation(j);
+            }
+            Location[] Places = new Location[open];
+            for (int i = 0; i < open; i++)
+            {
+                Places[i] = temp[i];
+            }
+            return Places;
+        }
+
+        private Location ConvertJsonToLocation(JObject j)
+        {
+            Location loc = new Location();
+            loc.Latitude = float.Parse(j["geometry"]["location"]["lat"].ToString());
+            loc.Longitude = float.Parse(j["geometry"]["location"]["lng"].ToString());
+            loc.Address = j["vicinity"].ToString();
+            loc.PhotoReference = j["reference"].ToString();
+            loc.Name = j["name"].ToString();
+            return loc;
+        }
+
         public async Task<string> GetAsync(string uri)
         {
             var httpClient = new HttpClient();

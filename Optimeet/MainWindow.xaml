@@ -47,6 +47,8 @@
                     </StackPanel>
                 </Border>
                 <StackPanel Orientation="Vertical" x:Name="CreateMenu" Margin="40,0,0,0">
+                <TextBlock FontWeight="Bold" FontFamily="Lucida Sans">Enter meeting subject</TextBlock>
+                <TextBox x:Name="MeetingSubject" Margin="0,5,0,10"></TextBox> 
                 <TextBlock FontWeight="Bold" FontFamily="Lucida Sans">Pick a Time and date</TextBlock>
                 <StackPanel Orientation="Horizontal" Height="22" Margin="0,5,0,0">
                     <DatePicker Height="25" HorizontalAlignment="Left" x:Name="DateTimePicker1" VerticalAlignment="Center" Width="110" Margin="0,-1,0,-1.6" />

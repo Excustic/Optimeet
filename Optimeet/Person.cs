@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Device.Location;
+using System.Linq;
+
 public struct Location
 {
     public float Latitude;
@@ -6,20 +9,31 @@ public struct Location
     public string Address;
     public string Name;
     public string PhotoReference;
+    public override string ToString()
+    {
+        return Name + " at " + Address;
+    }
+    public double DistanceTo(Location l2)
+    {
+        var g1 = new GeoCoordinate(Latitude, Longitude);
+        var g2 = new GeoCoordinate(l2.Latitude, l2.Longitude);
+        return g1.GetDistanceTo(g2);
+    }
+
 }
 namespace Optimeet
 {
     class Person
     {
-
+        private string _Name;
         public string Name
         {
-            get { return this.Name; }
+            get { return _Name; }
             private set
             {
-                if (value.Length != 0 && System.Text.RegularExpressions.Regex.IsMatch(value, "^[a-zA-Z0-9\x20]+$"))
+                if (value.Length != 0 && value.All(Char.IsLetter))
                 {
-                    this.Name = value;
+                    _Name = value;
                 }
                 else
                 {

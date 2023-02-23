@@ -44,7 +44,7 @@ namespace Optimeet
         {
             Location Centroid = LocationsCentroidWeighted();
             Location[] suggestions = await GeocodeHelper.GetInstance().TopNLocations(Centroid, 3, filter);
-
+            foreach (Location location in suggestions) { Console.WriteLine(location); }
         }
 
         private Location LocationsCentroidWeighted()
@@ -54,7 +54,7 @@ namespace Optimeet
             float[] Avg = { 0.0f, 0.0f };
             float[] sigma = { 0.0f, 0.0f };
             Location Solution = new Location();
-            for (int i = 0; i < People.Capacity; i++)
+            for (int i = 0; i < locations.Length; i++)
             {
                 locations[i] = People.ElementAt(i).GetLocation();
             }
@@ -67,19 +67,26 @@ namespace Optimeet
             Avg[1] /= N;
             foreach (Location l in locations)
             {
-                sigma[0] += l.Latitude - Avg[0];
-                sigma[1] += l.Longitude - Avg[1];
+                sigma[0] += (float)Math.Pow(l.Latitude - Avg[0], 2);
+                sigma[1] += (float)Math.Pow(l.Longitude - Avg[1], 2);
             }
             sigma[0] = (float)Math.Sqrt(sigma[0] / N);
             sigma[1] = (float)Math.Sqrt(sigma[1] / N);
 
             foreach (Location l in locations)
             {
-                Solution.Latitude += l.Latitude * (1 + (float)Math.Pow(Math.E, Math.Pow(-(l.Latitude - Avg[0]), 2) / (2 * Math.Pow(sigma[0], 2))));
-                Solution.Longitude += l.Longitude * (1 + (float)Math.Pow(Math.E, Math.Pow(-(l.Longitude - Avg[1]), 2) / (2 * Math.Pow(sigma[1], 2))));
+                Solution.Latitude += l.Latitude * ((float)Math.Pow(Math.E, (-Math.Pow(l.Latitude - Avg[0], 2)) / (2 * Math.Pow(sigma[0], 2))));
+                Solution.Longitude += l.Longitude * ((float)Math.Pow(Math.E, (-Math.Pow(l.Longitude - Avg[1], 2)) / (2 * Math.Pow(sigma[1], 2))));
             }
-            Solution.Latitude /= 2 * N;
-            Solution.Longitude /= 2 * N;
+            float SumLat = 0;
+            float SumLon = 0;
+            foreach (Location l in locations)
+            {
+                SumLat += (float)Math.Pow(Math.E, (-Math.Pow(l.Latitude - Avg[0], 2)) / (2 * Math.Pow(sigma[0], 2)));
+                SumLon += (float)Math.Pow(Math.E, (-Math.Pow(l.Longitude - Avg[1], 2)) / (2 * Math.Pow(sigma[1], 2)));
+            }
+            Solution.Latitude /= SumLat;
+            Solution.Longitude /= SumLon;
 
             return Solution;
         }
