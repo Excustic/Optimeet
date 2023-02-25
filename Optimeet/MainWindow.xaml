@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:fa="http://schemas.fontawesome.io/icons/"
         xmlns:m="clr-namespace:Microsoft.Maps.MapControl.WPF;assembly=Microsoft.Maps.MapControl.WPF" 
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Optimeet"
@@ -39,44 +40,70 @@
                     <DropShadowEffect BlurRadius="15" Direction="100" RenderingBias="Quality"/>
                 </m:Map.Effect>
             </m:Map>
-            <StackPanel Orientation="Vertical" Grid.Row="1" Margin="0,30,0,0" Height="370" VerticalAlignment="Top">
-                <Border Padding="0,20,0,20" MouseEnter="Highlight" MouseLeave="Unhighlight" >
-                    <StackPanel x:Name="MeetingPanel" Orientation="Horizontal" Margin="20,0,0,0">
+            <StackPanel Orientation="Vertical" Grid.Row="1" Margin="0,10,10,0" VerticalAlignment="Top">
+                <Button x:Name="CreateButton" HorizontalAlignment="Left" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" BorderBrush="Transparent" MouseEnter="Highlight" Click="CreateMeeting" MouseLeave="Unhighlight" Height="60" Margin="0,0,0.4,0">
+                    <StackPanel x:Name="MeetingPanel" Orientation="Horizontal" Margin="40,0,0,0">
                         <Image x:Name="CreateImg" Source="Assets/create.png" Width="40" Margin="0,0,20,0" HorizontalAlignment="Left"/>
-                        <Button x:Name="CreateButton" Background="Transparent" Template="{StaticResource NoMouseOverButtonTemplate}" FontFamily="Helvetica" FontSize="15" MouseLeftButtonDown="CreateMeeting" BorderBrush="Transparent">Create a new meeting</Button>
+                        <TextBlock Background="Transparent" VerticalAlignment="Center" FontFamily="Helvetica" FontSize="15"  >Create a new meeting</TextBlock>
                     </StackPanel>
-                </Border>
-                <StackPanel Orientation="Vertical" x:Name="CreateMenu" Margin="40,0,0,0">
-                <TextBlock FontWeight="Bold" FontFamily="Lucida Sans">Enter meeting subject</TextBlock>
-                <TextBox x:Name="MeetingSubject" Margin="0,5,0,10"></TextBox> 
-                <TextBlock FontWeight="Bold" FontFamily="Lucida Sans">Pick a Time and date</TextBlock>
-                <StackPanel Orientation="Horizontal" Height="22" Margin="0,5,0,0">
-                    <DatePicker Height="25" HorizontalAlignment="Left" x:Name="DateTimePicker1" VerticalAlignment="Center" Width="110" Margin="0,-1,0,-1.6" />
-                    <ComboBox Loaded="ComboBoxStartUpHrs" Height="25" Margin="10,0,0,0" RenderTransformOrigin="0.5,0.5" Width="43" BorderThickness="0"/>
-                    <TextBlock Margin="5,0">:</TextBlock>
-                    <ComboBox Loaded="ComboBoxStartUpMins" Height="25" Margin="0" RenderTransformOrigin="0.5,0.5" Width="43" BorderThickness="0">
+                </Button>
+                <StackPanel Orientation="Vertical" x:Name="CreateMenu" Margin="40,10,0,0">
+                    <TextBlock FontWeight="Bold" FontFamily="Lucida Sans">Enter meeting subject</TextBlock>
+                    <TextBox x:Name="MeetingSubject" Margin="0,5,0,10"></TextBox>
+                    <TextBlock FontWeight="Bold" FontFamily="Lucida Sans">Choose type of meeting place</TextBlock>
+                    <ComboBox x:Name="MeetingPlaceFilter" SelectedIndex="0">
+                        <ComboBoxItem x:Name="restaurant">Restaurant</ComboBoxItem>
+                        <ComboBoxItem>Park</ComboBoxItem>
+                        <ComboBoxItem>Cafe</ComboBoxItem>
                     </ComboBox>
+                    <TextBlock FontWeight="Bold" FontFamily="Lucida Sans">Pick a Time and date</TextBlock>
+                    <StackPanel Orientation="Horizontal" Height="22" Margin="0,5,0,0">
+                        <DatePicker Height="25" HorizontalAlignment="Left" x:Name="DateTimePicker1" VerticalAlignment="Top" Width="110" Margin="0,-1,0,-1.6" />
+                        <ComboBox x:Name="HoursBox" Loaded="ComboBoxStartUpHrs" Height="25" Margin="10,0,0,0" RenderTransformOrigin="0.5,0.5" Width="43" BorderThickness="0"/>
+                        <TextBlock Margin="5,0">:</TextBlock>
+                        <ComboBox x:Name="MinutesBox" Loaded="ComboBoxStartUpMins" Height="25" Margin="0" RenderTransformOrigin="0.5,0.5" Width="43" BorderThickness="0">
+                        </ComboBox>
+                    </StackPanel>
+                    <TextBlock Margin="0,10,0,10" FontWeight="Bold" FontFamily="Lucida Sans">Pick participants from contacts</TextBlock>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <TextBox Width="150px" Height="25px"></TextBox>
+                        <Button x:Name="SearchButton" Template="{StaticResource NoMouseOverButtonTemplate}" BorderBrush="Transparent" Background="Transparent" MouseEnter="Highlight" MouseLeave="Unhighlight">
+                            <Image  Source="Assets/search.png" Height="25px" Margin="10,0,0,0"/>
+                        </Button>
+                    </StackPanel>
+                    <ScrollViewer HorizontalAlignment="Left" MaxHeight="100" VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="ContactList"></StackPanel>
+                    </ScrollViewer>
                 </StackPanel>
-                </StackPanel>
+                <ScrollViewer HorizontalAlignment="Left" x:Name="SuggestionsScroll" Margin="40,10,0,0" MaxHeight="180" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                        <StackPanel x:Name="SuggestionsList" Orientation="Horizontal" Margin="0,0,0,5">
+                           
+                        </StackPanel>
+                    </ScrollViewer>
+                <fa:ImageAwesome x:Name="MeetingLoadingIcon" Visibility="Collapsed" Icon="Spinner" Spin="True" SpinDuration="3" Height="30"/>
+                <StackPanel Orientation="Horizontal" x:Name="SaveMenu" Margin="40,20,0,0" HorizontalAlignment="Left">
+                        <Button Margin="0,0,10,0" Click="CancelMeeting">Cancel</Button>
+                        <Button x:Name="MeetingSaveButton" Margin="10,0,0,0" Click="SaveMeeting">Suggest a meeting place</Button>
+                    </StackPanel>
 
-                <Border Padding="0,20,0,20" MouseEnter="Highlight" MouseLeave="Unhighlight">
-                    <StackPanel Orientation="Horizontal" Margin="20,0,0,0">
+                <Button x:Name="HistoryButton" HorizontalAlignment="Left" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" BorderBrush="Transparent" MouseEnter="Highlight" Click="OpenPastMeetings" MouseLeave="Unhighlight" Height="60" Margin="0,10,0,0">
+                    <StackPanel Orientation="Horizontal" Margin="40,0,0,0">
                         <Image x:Name="HistoryImg" Source="Assets/history.png" Width="40" Margin="0,0,20,0" HorizontalAlignment="Left"/>
-                        <Button x:Name="HistoryButton" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" FontFamily="Helvetica" FontSize="15" MouseLeftButtonDown="CreateMeeting" BorderBrush="Transparent">Review past meetings</Button>
+                        <TextBlock Background="Transparent" VerticalAlignment="Center" FontFamily="Helvetica" FontSize="15">Saved meetings</TextBlock>
                     </StackPanel>
-                </Border>
-                <Border Padding="0,20,0,20" MouseEnter="Highlight" MouseLeave="Unhighlight">
-                    <StackPanel Orientation="Horizontal" Margin="20,0,0,0">
+                </Button>
+                <Button x:Name="SettingsButton" HorizontalAlignment="Left" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" BorderBrush="Transparent" MouseEnter="Highlight" Click="OpenSettings" MouseLeave="Unhighlight" Height="60" Margin="0,10,0,0">
+                    <StackPanel Orientation="Horizontal" Margin="40,0,0,0">
                         <Image x:Name="SettingsImg" Source="Assets/settings.png" Width="40" Margin="0,0,20,0" HorizontalAlignment="Left"/>
-                        <Button x:Name="SettingsButton" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" FontFamily="Helvetica" FontSize="15" MouseLeftButtonDown="CreateMeeting" BorderBrush="Transparent">Settings</Button>
+                        <TextBlock Background="Transparent" VerticalAlignment="Center" FontFamily="Helvetica" FontSize="15">Settings</TextBlock>
                     </StackPanel>
-                </Border>
-                <Border Padding="0,20,0,20" MouseEnter="Highlight" MouseLeave="Unhighlight">
-                    <StackPanel Orientation="Horizontal" Margin="20,0,0,0">
+                </Button>
+                <Button x:Name="InfoButton" HorizontalAlignment="Left" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" BorderBrush="Transparent" MouseEnter="Highlight" Click="OpenAbout" MouseLeave="Unhighlight" Height="60" Margin="0,10,0,0">
+                    <StackPanel Orientation="Horizontal" Margin="40,0,0,0">
                         <Image x:Name="InfoImg" Source="Assets/about.png" Width="40" Margin="0,0,20,0" HorizontalAlignment="Left"/>
-                        <Button x:Name="InfoButton" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" FontFamily="Helvetica" FontSize="15" MouseLeftButtonDown="CreateMeeting" BorderBrush="Transparent">About</Button>
+                        <TextBlock Background="Transparent" VerticalAlignment="Center" FontFamily="Helvetica" FontSize="15">Settings</TextBlock>
                     </StackPanel>
-                </Border>
+                </Button>
             </StackPanel>
         </Grid>
     </Border>

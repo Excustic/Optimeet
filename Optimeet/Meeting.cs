@@ -1,33 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Optimeet
 {
     class Meeting
     {
-        public struct Date
-        {
-            public int Day;
-            public int Month;
-            public int Year;
-            public int Hour;
-            public int Minute;
-            public override string ToString()
-            {
-                return Day + "/" + Month + "/" + Year + " " + Hour + ":" + Minute;
-
-            }
-        }
-        private string Title;
-        private Date MeetingDate;
+        public string Title { get; set; }
+        private DateTime MeetingDate;
         private List<Person> People;
         private Location MeetingLocation;
-        public Meeting(string t, Date d, List<Person> p)
+        public static int user_settings_resultsCount = 3;
+
+        public Meeting(string t, DateTime d, List<Person> p)
         {
             Title = t;
             MeetingDate = d;
             People = p;
+        }
+        public DateTime GetMeetingDate()
+        {
+            return MeetingDate;
+        }
+        public void SetMeetingDate(DateTime dt)
+        {
+            MeetingDate = dt;
+        }
+        public List<Person> GetPeople()
+        {
+            return People;
         }
         public void AddPerson(Person p)
         {
@@ -40,16 +42,16 @@ namespace Optimeet
             MeetingLocation = FinalLoc;
         }
 
-        public async void SuggestLocations(string filter = "")
+        public async Task<Location[]> SuggestLocations(string filter = "")
         {
             Location Centroid = LocationsCentroidWeighted();
-            Location[] suggestions = await GeocodeHelper.GetInstance().TopNLocations(Centroid, 3, filter);
-            foreach (Location location in suggestions) { Console.WriteLine(location); }
+            Location[] suggestions = await MapsHelper.GetInstance().TopNLocations(Centroid, user_settings_resultsCount, filter);
+            return suggestions;
         }
 
         private Location LocationsCentroidWeighted()
         {
-            Location[] locations = new Location[People.Capacity];
+            Location[] locations = new Location[People.Count];
             int N = locations.Length;
             float[] Avg = { 0.0f, 0.0f };
             float[] sigma = { 0.0f, 0.0f };

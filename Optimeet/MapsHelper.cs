@@ -3,41 +3,46 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Windows.Media.Imaging;
 
 namespace Optimeet
 {
-    public sealed class GeocodeHelper
+    public sealed class MapsHelper
     {
         private static string baseUrlGC = "http://api.positionstack.com/v1/reverse?access_key={0}&query={1},{2}&fields=results.label&limit=1"; // part1 of the URL for GeoCoding
         private static string baseUrlPR = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?keyword={0}&location={1},{2}&radius={3}&key=" + GKey;
+        private static string baseUrlPhotoRequest = "https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=400&photo_reference={0}&key=" + GKey;
         const string ApiKey = "2b06ea680225d5c6118150af3a7add6a";
-        const string GKey = "AIzaSyCBv1-o_dBlNgVaX22qMTN-qwRRzCufkrM";
+        const string GKey = "AIzaSyDHsDcQteVBMyFed1sVfqYpR4jFQ6BFjr4";
         const string ReviewCount = "user_ratings_total";
         const string ratings = "rating";
 
-        private GeocodeHelper() { }
-        private static GeocodeHelper _instance;
-        public static GeocodeHelper GetInstance()
+        private MapsHelper() { }
+        private static MapsHelper _instance;
+        public static MapsHelper GetInstance()
         {
             if (_instance == null)
-                _instance = new GeocodeHelper();
+                _instance = new MapsHelper();
             return _instance;
         }
         public async Task<string> ReverseGeocode(float Latitude, float Longitude)
         {
-            string Address;
-            Address = "";
-            var url = String.Format(baseUrlGC, ApiKey, Latitude, Longitude);
-            Console.WriteLine("waiting for response");
-            string result = await GetAsync(url);
-            Console.WriteLine(result);
-            JObject res = JsonConvert.DeserializeObject<JObject>(result);
-            Console.WriteLine(res["data"][0]["label"]);
-            Console.WriteLine("printed response");
-            return Address;
+            try { 
+                var url = String.Format(baseUrlGC, ApiKey, Latitude, Longitude);
+                string result = await GetAsync(url);
+                JObject res = JsonConvert.DeserializeObject<JObject>(result);
+                return res["data"][0]["label"].ToString();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("ReverseGeocode failed: "+e.Message);
+            }
+            return null;
         }
         public async Task<Location[]> TopNLocations(Location l, int NumOfResults, string filter = "")
         {
@@ -105,8 +110,10 @@ namespace Optimeet
             loc.Latitude = float.Parse(j["geometry"]["location"]["lat"].ToString());
             loc.Longitude = float.Parse(j["geometry"]["location"]["lng"].ToString());
             loc.Address = j["vicinity"].ToString();
-            loc.PhotoReference = j["reference"].ToString();
+            loc.PhotoReference = j["photos"][0]["photo_reference"].ToString();
             loc.Name = j["name"].ToString();
+            loc.Rating = double.Parse(j[ratings].ToString());
+            loc.ReviewCount = int.Parse(j[ReviewCount].ToString());
             return loc;
         }
 
@@ -117,5 +124,31 @@ namespace Optimeet
             return response;
         }
 
+        public async Task<BitmapImage> BitmapImageFromUrl(string photoReference)
+        {
+            BitmapImage bitmap = null;
+            var httpClient = new HttpClient();
+
+            using (var response = await httpClient.GetAsync(string.Format(baseUrlPhotoRequest, photoReference)))
+            {
+                if (response.IsSuccessStatusCode)
+                {
+                    using (var stream = new MemoryStream())
+                    {
+                        await response.Content.CopyToAsync(stream);
+                        stream.Seek(0, SeekOrigin.Begin);
+
+                        bitmap = new BitmapImage();
+                        bitmap.BeginInit();
+                        bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                        bitmap.StreamSource = stream;
+                        bitmap.EndInit();
+                        bitmap.Freeze();
+                    }
+                }
+            }
+
+            return bitmap;
+        }
     }
 }

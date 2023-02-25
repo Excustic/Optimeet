@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Device.Location;
 using System.Linq;
+using System.Threading.Tasks;
 
 public struct Location
 {
@@ -9,6 +10,8 @@ public struct Location
     public string Address;
     public string Name;
     public string PhotoReference;
+    public double Rating;
+    public int ReviewCount;
     public override string ToString()
     {
         return Name + " at " + Address;
@@ -31,7 +34,7 @@ namespace Optimeet
             get { return _Name; }
             private set
             {
-                if (value.Length != 0 && value.All(Char.IsLetter))
+                if (value.Length > 1 && value.All(Char.IsLetter))
                 {
                     _Name = value;
                 }
@@ -47,16 +50,13 @@ namespace Optimeet
             Name = n;
             SavedLocation = new Location();
         }
-        public Person(string n, Location l)
-        {
-            Name = n;
-            SavedLocation = l;
-        }
-        public void SetLocation(float lat, float lon, string Address, string Name = "null", string PhotoReference = "null")
+        public async void SetLocation(float lat, float lon, string Address="none", string Name = null, string PhotoReference = null)
         {
             SavedLocation.Latitude = lat;
             SavedLocation.Longitude = lon;
             SavedLocation.Address = Address;
+            if (Address==null||Address.Equals("none"))
+                SavedLocation.Address = await MapsHelper.GetInstance().ReverseGeocode(lat, lon);
             SavedLocation.Name = Name;
             SavedLocation.PhotoReference = PhotoReference;
         }
@@ -64,15 +64,11 @@ namespace Optimeet
         {
             return SavedLocation;
         }
-        public void LatLongToAddress()
-        {
-
-        }
         public override string ToString()
         {
             string Address;
-            Address = SavedLocation.Address == null ? "No available location" : SavedLocation.Address;
-            return Name + ", " + SavedLocation.Address;
+            Address = SavedLocation.Address == null ? "Address unavailable" : SavedLocation.Address;
+            return Name + ", " + Address;
         }
     }
 }
