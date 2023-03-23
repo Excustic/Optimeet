@@ -1,16 +1,28 @@
-﻿using System;
+﻿using Optimeet;
+using System;
 using System.Device.Location;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
+[DataContract]
+[KnownType(typeof(TrieNode<Contact>))]
+[KnownType(typeof(Contact))]
 public struct Location
 {
+    [DataMember]
     public float Latitude;
+    [DataMember]
     public float Longitude;
+    [DataMember]
     public string Address;
+    [DataMember]
     public string Name;
+    [DataMember]
     public string PhotoReference;
+    [DataMember]
     public double Rating;
+    [DataMember]
     public int ReviewCount;
     public override string ToString()
     {
@@ -26,16 +38,26 @@ public struct Location
 }
 namespace Optimeet
 {
-    class Person
+    [DataContract]
+    [KnownType(typeof(TrieNode<Contact>))]
+    public class Contact
     {
+        [DataMember]
         private string _Name;
+        [DataMember]
         public string Name
         {
             get { return _Name; }
             private set
             {
-                if (value.Length > 1 && value.All(Char.IsLetter))
+                if (value.Length > 1)
                 {
+                    for (int i = 0; i < value.Length; i++)
+                    {
+                        if (!char.IsLetter(value[i]))
+                            if (i < 2 || !char.IsWhiteSpace(value[i]))
+                                throw new Exception("Invalied name");
+                    }
                     _Name = value;
                 }
                 else
@@ -44,13 +66,14 @@ namespace Optimeet
                 }
             }
         }
+        [DataMember]
         private Location SavedLocation;
-        public Person(string n)
+        public Contact(string n)
         {
             Name = n;
             SavedLocation = new Location();
         }
-        public async void SetLocation(float lat, float lon, string Address="none", string Name = null, string PhotoReference = null)
+        public async void SetLocation(float lat, float lon, string Address="Address Unavailable", string Name = null, string PhotoReference = null)
         {
             SavedLocation.Latitude = lat;
             SavedLocation.Longitude = lon;

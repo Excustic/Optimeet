@@ -25,13 +25,31 @@ namespace Optimeet
         {
             InitializeComponent();
             ResetViews();
+            LoadContactsUI();
             helper = MapsHelper.GetInstance();
-            //DateTime d = new DateTime(2023, 5, 2, 21, 30, 0);
-            //List<Person> p = new List<Person>();
-            //p.Add(new Person("Ben"), new Location { Latitude = 32.0267904f, Longitude = 34.7579567f }));
-            //p.Add(new Person("Michael", new Location { Latitude = 32.0496376f, Longitude = 34.8059143f }));
-            //p.Add(new Person("Leon", new Location { Latitude = 31.9770394f, Longitude = 34.7695861f }));
-            //p.Add(new Person("Evgeniy", new Location { Latitude = 32.432225f, Longitude = 34.920580f }));
+            FileManager fm = FileManager.GetInstance();
+            //Contact p1 = new Contact("Ben");
+            //p1.SetLocation(32.0267904f, 34.7579567f);
+            //Contact p2 = new Contact("Michael");
+            //p2.SetLocation(32.0496376f, 34.8059143f);
+            //Contact p3 = new Contact("Leon");
+            //p3.SetLocation(31.9770394f, 34.7695861f);
+            //Contact p4 = new Contact("Evgeniy");
+            //p4.SetLocation(32.432225f, 34.920580f);
+            //Contact p5 = new Contact("Masha");
+            //p5.SetLocation(34.421225f, 36.921580f);
+            //Contact p6 = new Contact("Leonid");
+            //p6.SetLocation(32.233225f, 31.922580f);
+            //Contact p7 = new Contact("Michael Stern");
+            //p7.SetLocation(33.472115f, 35.220580f);
+            //fm.Contacts.Add(p1.Name, p1);
+            //fm.Contacts.Add(p2.Name, p2);
+            //fm.Contacts.Add(p3.Name, p3);
+            //fm.Contacts.Add(p4.Name, p4);
+            //fm.Contacts.Add(p5.Name, p5);
+            //fm.Contacts.Add(p6.Name, p6);
+            //fm.Contacts.Add(p7.Name, p7);
+            //fm.SaveContacts();
             //Meeting m = new Meeting("Ben's birthday", d, p);
             //m.SuggestLocations("Restaurant");
         }
@@ -129,20 +147,20 @@ namespace Optimeet
 
         private void AddContactList()
         {
-            List<Person> p = new List<Person>();
-            Person p1 = new Person("Ben");
+            List<Contact> p = new List<Contact>();
+            Contact p1 = new Contact("Ben");
             p1.SetLocation(32.0267904f, 34.7579567f);
-            Person p2 = new Person("Michael");
+            Contact p2 = new Contact("Michael");
             p2.SetLocation(32.0496376f, 34.8059143f);
-            Person p3 = new Person("Leon");
+            Contact p3 = new Contact("Leon");
             p3.SetLocation(31.9770394f, 34.7695861f);
-            Person p4 = new Person("Evgeniy");
+            Contact p4 = new Contact("Evgeniy");
             p4.SetLocation(32.432225f, 34.920580f);
             p.Add(p1);
             p.Add(p2);
             p.Add(p3);
             p.Add(p4);
-            foreach (Person person in p)
+            foreach (Contact person in p)
             {
                 CheckBox box = new CheckBox();
                 box.Content = person;
@@ -217,10 +235,10 @@ namespace Optimeet
                 date = date.AddHours(double.Parse(HoursBox.Text));
                 date = date.AddMinutes(double.Parse(MinutesBox.Text));
             }
-            List<Person> participants = new List<Person>();
+            List<Contact> participants = new List<Contact>();
             foreach(CheckBox box in ContactList.Children)
                 if (box.IsChecked == true)
-                    participants.Add((Person)box.Content);
+                    participants.Add((Contact)box.Content);
             string error = ValidateMeeting(subject, date, participants);
             if (error == null)
             {
@@ -298,7 +316,7 @@ namespace Optimeet
         SuggestionsScroll.Visibility = Visibility.Visible;
         }
 
-        private string ValidateMeeting(string Title, DateTime date, List<Person> people)
+        private string ValidateMeeting(string Title, DateTime date, List<Contact> people)
         {
             if (Title.Length <= 2)
                 return "Please enter a longer subject";
@@ -307,6 +325,75 @@ namespace Optimeet
             if (people.Count < 2)
                 return "Please add at least 2 participants";
             return null;
+        }
+
+        private void LoadContactsUI()
+        {
+            Trie<Contact> trContacts = FileManager.GetInstance().Contacts;
+            Queue<Contact> qContacts = trContacts.GetChildren();
+            while(qContacts.Count > 0)
+            { 
+                Contact c = qContacts.Dequeue();
+                //Build the box
+                TextBlock ContactDetails = new TextBlock()
+                {
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(20,0,0,0),
+                    FontSize = 22,
+                    Text = c.ToString()
+                };
+                Border ContactBorder = new Border
+                {
+                    Height = 100,
+                    Width = 100,
+                    Background = Brushes.AntiqueWhite,
+                    BorderBrush = Brushes.Transparent,
+                    CornerRadius = new CornerRadius(80)
+                };
+                ContactBorder.Child = new TextBlock()
+                {
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    FontSize = 26,
+                    Text = c.Name.Substring(0,2)
+                };
+                StackPanel ContactPanel = new StackPanel()
+                {
+                    Orientation = Orientation.Horizontal,
+                    HorizontalAlignment = HorizontalAlignment.Left
+                };
+                Image icEdit = new Image()
+                {
+                    Source = new BitmapImage(new Uri(@"/Assets/edit.png", UriKind.Relative)),
+                    Height = 60,
+                    Width = 60,
+                    HorizontalAlignment = HorizontalAlignment.Right
+                };
+                Image icDelete = new Image()
+                {
+                    Source = new BitmapImage(new Uri(@"/Assets/delete.png", UriKind.Relative)),
+                    Height = 60,
+                    Width = 60,
+                    Margin = new Thickness(0,0,0,15),
+                    HorizontalAlignment = HorizontalAlignment.Right
+                };
+                ContactPanel.Children.Add(ContactBorder);
+                ContactPanel.Children.Add(ContactDetails);
+                ContactPanel.Children.Add(icEdit);
+                ContactPanel.Children.Add(icDelete);
+                //Encapsulate in button and add to list
+                Button b = new Button
+                {
+                    Content = ContactPanel,
+                    Name = "bt_" + "",
+                    Template = (ControlTemplate)FindResource("NoMouseOverButtonTemplate"),
+                    Background = Brushes.Transparent,
+                    BorderBrush = Brushes.Transparent,
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    Margin = new Thickness(30, 20, 0, 0)
+                };
+                ContactBook.Children.Add(b);
+            }
         }
     }
 }

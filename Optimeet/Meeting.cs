@@ -5,15 +5,15 @@ using System.Threading.Tasks;
 
 namespace Optimeet
 {
-    class Meeting
+    public class Meeting
     {
         public string Title { get; set; }
         private DateTime MeetingDate;
-        private List<Person> People;
+        private List<Contact> People;
         private Location MeetingLocation;
         public static int user_settings_resultsCount = 3;
 
-        public Meeting(string t, DateTime d, List<Person> p)
+        public Meeting(string t, DateTime d, List<Contact> p)
         {
             Title = t;
             MeetingDate = d;
@@ -27,11 +27,11 @@ namespace Optimeet
         {
             MeetingDate = dt;
         }
-        public List<Person> GetPeople()
+        public List<Contact> GetPeople()
         {
             return People;
         }
-        public void AddPerson(Person p)
+        public void AddPerson(Contact p)
         {
             if (p != null)
                 People.Add(p);
@@ -95,7 +95,7 @@ namespace Optimeet
         public override string ToString()
         {
             string names = "";
-            foreach (Person item in People)
+            foreach (Contact item in People)
                 names += item.Name + ",";
             names = names.Substring(0, names.Length - 2);
             return Title + " meeting, on the " + MeetingDate.ToString() + ", at " + MeetingLocation.Address + ". Attending: " + names;

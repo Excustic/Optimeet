@@ -40,6 +40,24 @@
                     <DropShadowEffect BlurRadius="15" Direction="100" RenderingBias="Quality"/>
                 </m:Map.Effect>
             </m:Map>
+                <DockPanel LastChildFill="True" Grid.Column="1" Grid.RowSpan="2" Grid.IsSharedSizeScope="True" Panel.ZIndex="2" Background="White">
+                    <TextBlock DockPanel.Dock="Top" HorizontalAlignment="Center" FontSize="44" Margin="0,50,0,0">Saved Contacts</TextBlock>
+                <Border BorderBrush="Gray" BorderThickness="0.8" DockPanel.Dock="Top" Margin="0,10,0,0"/>
+                <ScrollViewer DockPanel.Dock="Bottom" Margin="0,0,20,0" VerticalScrollBarVisibility="Auto">
+                            <StackPanel x:Name="ContactBook" Height="Auto" Width="Auto"></StackPanel>
+                    </ScrollViewer>
+                </DockPanel>
+            <Button Padding="20" Width="200" Height="70" BorderBrush="Transparent" x:Name="AddContactButton" Grid.Column="1" Grid.Row="2" Panel.ZIndex="3" VerticalAlignment="Bottom" Template="{StaticResource NoMouseOverButtonTemplate}" Background="MediumSpringGreen" FontSize="20" HorizontalAlignment="Right" Margin="0,50,30,30">
+                + Add contact
+                <Button.Resources>
+                    <Style TargetType="Border">
+                        <Setter Property="CornerRadius" Value="15"/>
+                    </Style>
+                </Button.Resources>
+                <Button.Effect>
+                    <DropShadowEffect BlurRadius="10" Direction="215" Opacity="0.6"/>
+                </Button.Effect>
+            </Button>
             <StackPanel Orientation="Vertical" Grid.Row="1" Margin="0,10,10,0" VerticalAlignment="Top">
                 <Button x:Name="CreateButton" HorizontalAlignment="Left" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" BorderBrush="Transparent" MouseEnter="Highlight" Click="CreateMeeting" MouseLeave="Unhighlight" Height="60" Margin="0,0,0.4,0">
                     <StackPanel x:Name="MeetingPanel" Orientation="Horizontal" Margin="40,0,0,0">
@@ -47,7 +65,7 @@
                         <TextBlock Background="Transparent" VerticalAlignment="Center" FontFamily="Helvetica" FontSize="15"  >Create a new meeting</TextBlock>
                     </StackPanel>
                 </Button>
-                <StackPanel Orientation="Vertical" x:Name="CreateMenu" Margin="40,10,0,0">
+                <StackPanel Orientation="Vertical" x:Name="CreateMenu" Margin="40,10,0,0" Visibility="Collapsed">
                     <TextBlock FontWeight="Bold" FontFamily="Lucida Sans">Enter meeting subject</TextBlock>
                     <TextBox x:Name="MeetingSubject" Margin="0,5,0,10"></TextBox>
                     <TextBlock FontWeight="Bold" FontFamily="Lucida Sans">Choose type of meeting place</TextBlock>
@@ -76,20 +94,20 @@
                     </ScrollViewer>
                 </StackPanel>
                 <ScrollViewer HorizontalAlignment="Left" x:Name="SuggestionsScroll" Margin="40,10,0,0" MaxHeight="180" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                        <StackPanel x:Name="SuggestionsList" Orientation="Horizontal" Margin="0,0,0,5">
-                           
-                        </StackPanel>
-                    </ScrollViewer>
+                    <StackPanel x:Name="SuggestionsList" Orientation="Horizontal" Margin="0,0,0,5">
+
+                    </StackPanel>
+                </ScrollViewer>
                 <fa:ImageAwesome x:Name="MeetingLoadingIcon" Visibility="Collapsed" Icon="Spinner" Spin="True" SpinDuration="3" Height="30"/>
                 <StackPanel Orientation="Horizontal" x:Name="SaveMenu" Margin="40,20,0,0" HorizontalAlignment="Left">
-                        <Button Margin="0,0,10,0" Click="CancelMeeting">Cancel</Button>
-                        <Button x:Name="MeetingSaveButton" Margin="10,0,0,0" Click="SaveMeeting">Suggest a meeting place</Button>
-                    </StackPanel>
+                    <Button Margin="0,0,10,0" Click="CancelMeeting">Cancel</Button>
+                    <Button x:Name="MeetingSaveButton" Margin="10,0,0,0" Click="SaveMeeting">Suggest a meeting place</Button>
+                </StackPanel>
 
                 <Button x:Name="HistoryButton" HorizontalAlignment="Left" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" BorderBrush="Transparent" MouseEnter="Highlight" Click="OpenPastMeetings" MouseLeave="Unhighlight" Height="60" Margin="0,10,0,0">
                     <StackPanel Orientation="Horizontal" Margin="40,0,0,0">
                         <Image x:Name="HistoryImg" Source="Assets/history.png" Width="40" Margin="0,0,20,0" HorizontalAlignment="Left"/>
-                        <TextBlock Background="Transparent" VerticalAlignment="Center" FontFamily="Helvetica" FontSize="15">Saved meetings</TextBlock>
+                        <TextBlock Background="Transparent" VerticalAlignment="Center" FontFamily="Helvetica" FontSize="15">My meetings</TextBlock>
                     </StackPanel>
                 </Button>
                 <Button x:Name="SettingsButton" HorizontalAlignment="Left" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" BorderBrush="Transparent" MouseEnter="Highlight" Click="OpenSettings" MouseLeave="Unhighlight" Height="60" Margin="0,10,0,0">
@@ -98,6 +116,19 @@
                         <TextBlock Background="Transparent" VerticalAlignment="Center" FontFamily="Helvetica" FontSize="15">Settings</TextBlock>
                     </StackPanel>
                 </Button>
+                <StackPanel Orientation="Vertical" x:Name="SettingsMenu" Margin="40,10,0,0">
+                    <Button x:Name="ContactsButton" Margin="0,0,0,0">My contacts</Button>
+                    <TextBlock TextWrapping="WrapWithOverflow" Margin="0,10,0,0">Number of place suggestions</TextBlock>
+                    <DockPanel VerticalAlignment="Center" Margin="10">
+                        <TextBox Text="{Binding ElementName=slResults, Path=Value, UpdateSourceTrigger=PropertyChanged}" DockPanel.Dock="Right" TextAlignment="Right" Width="40" />
+                        <Slider Maximum="20" Minimum="3" TickPlacement="BottomRight" TickFrequency="100" IsSnapToTickEnabled="True" Name="slResults" Value="5"/>
+                    </DockPanel>
+                    <TextBlock TextWrapping="WrapWithOverflow" Margin="0,10,0,0">Meeting radius (more options when increased)</TextBlock>
+                    <DockPanel VerticalAlignment="Center" Margin="10">
+                        <TextBox Text="{Binding ElementName=slRadius, Path=Value, UpdateSourceTrigger=PropertyChanged}" DockPanel.Dock="Right" TextAlignment="Right" Width="40" />
+                        <Slider Maximum="3000" Minimum="500" TickPlacement="BottomRight" TickFrequency="100" IsSnapToTickEnabled="True" Name="slRadius" Value="800"/>
+                    </DockPanel>
+                </StackPanel>
                 <Button x:Name="InfoButton" HorizontalAlignment="Left" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" BorderBrush="Transparent" MouseEnter="Highlight" Click="OpenAbout" MouseLeave="Unhighlight" Height="60" Margin="0,10,0,0">
                     <StackPanel Orientation="Horizontal" Margin="40,0,0,0">
                         <Image x:Name="InfoImg" Source="Assets/about.png" Width="40" Margin="0,0,20,0" HorizontalAlignment="Left"/>
