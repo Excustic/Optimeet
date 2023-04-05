@@ -1,16 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
 namespace Optimeet
 {
-    public class Meeting
+    [DataContract]
+    [KnownType(typeof(SortedSet<Meeting>))]
+    public class Meeting:IComparable<DateTime>
     {
+        [DataMember]
         public string Title { get; set; }
+        [DataMember]
         private DateTime MeetingDate;
+        [DataMember]
         private List<Contact> People;
+        [DataMember]
         private Location MeetingLocation;
+        [DataMember]
         public static int user_settings_resultsCount = 3;
 
         public Meeting(string t, DateTime d, List<Contact> p)
@@ -99,6 +107,11 @@ namespace Optimeet
                 names += item.Name + ",";
             names = names.Substring(0, names.Length - 2);
             return Title + " meeting, on the " + MeetingDate.ToString() + ", at " + MeetingLocation.Address + ". Attending: " + names;
+        }
+
+        public int CompareTo(DateTime other)
+        {
+            return DateTime.Compare(MeetingDate, other);
         }
     }
 }

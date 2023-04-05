@@ -11,16 +11,19 @@ namespace Optimeet
 {
     public sealed class FileManager
     {
-        readonly string path = Path.Combine(Environment.GetFolderPath(
+        readonly string path_contacts = Path.Combine(Environment.GetFolderPath(
         Environment.SpecialFolder.MyDoc‌​uments), "Optimeet", "contacts.xml");
+        readonly string path_meetings = Path.Combine(Environment.GetFolderPath(
+        Environment.SpecialFolder.MyDoc‌​uments), "Optimeet", "meetings.xml");
         public Trie<Contact> Contacts;
-        public List<Meeting> Meetings;
+        public SortedSet<Meeting> Meetings;
         private static FileManager _instance;
         private FileManager() 
         {
             LoadContacts();
-            Meetings = null;
+            LoadMeetings();
         }
+
         public static FileManager GetInstance()
         {
             if (_instance == null)
@@ -38,22 +41,22 @@ namespace Optimeet
                 Indent = true,
                 IndentChars = "\t",
             };
-            if (!Directory.Exists(path))
+            if (!Directory.Exists(path_contacts))
             { 
-                string[] splits = path.Split('\\');
-                string rootpath = path.Substring(0, path.Length - splits[splits.Length - 1].Length);
+                string[] splits = path_contacts.Split('\\');
+                string rootpath = path_contacts.Substring(0, path_contacts.Length - splits[splits.Length - 1].Length);
                 Directory.CreateDirectory(rootpath);
             }
-            var writer = XmlWriter.Create(path, settings);
+            var writer = XmlWriter.Create(path_contacts, settings);
             serializer.WriteObject(writer, Contacts);
             writer.Close();
         }
 
         private void LoadContacts()
         {
-            if (File.Exists(path))
+            if (File.Exists(path_contacts))
             {
-                var fileStream = new FileStream(path, FileMode.Open);
+                var fileStream = new FileStream(path_contacts, FileMode.Open);
                 var reader = XmlDictionaryReader.CreateTextReader(fileStream, new XmlDictionaryReaderQuotas());
                 var serializer = new DataContractSerializer(typeof(Trie<Contact>));
                 Trie<Contact> serializableObject = (Trie<Contact>)serializer.ReadObject(reader, true);
@@ -63,10 +66,39 @@ namespace Optimeet
             }
             else Contacts = new Trie<Contact>();
         }
-
-        private void SaveMeetings()
+        private void LoadMeetings()
         {
-
+            if (File.Exists(path_meetings))
+            {
+                var fileStream = new FileStream(path_meetings, FileMode.Open);
+                var reader = XmlDictionaryReader.CreateTextReader(fileStream, new XmlDictionaryReaderQuotas());
+                var serializer = new DataContractSerializer(typeof(SortedSet<Meeting>));
+                SortedSet<Meeting> serializableObject = (SortedSet<Meeting>)serializer.ReadObject(reader, true);
+                reader.Close();
+                fileStream.Close();
+                Meetings = serializableObject;
+            }
+            else Meetings = new SortedSet<Meeting>();
         }
+
+
+        public void SaveMeetings()
+        {
+            var serializer = new DataContractSerializer(typeof(SortedSet<Meeting>));
+            var settings = new XmlWriterSettings()
+            {
+                Indent = true,
+                IndentChars = "\t",
+            };
+            if (!Directory.Exists(path_meetings))
+            {
+                string[] splits = path_meetings.Split('\\');
+                string rootpath = path_meetings.Substring(0, path_meetings.Length - splits[splits.Length - 1].Length);
+                Directory.CreateDirectory(rootpath);
+            }
+            var writer = XmlWriter.Create(path_meetings, settings);
+            serializer.WriteObject(writer, Meetings);
+            writer.Close();
+        }      
     }
 }

@@ -169,5 +169,9 @@
   <ItemGroup>
     <Resource Include="Assets\search.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\delete.png" />
+    <Resource Include="Assets\edit.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

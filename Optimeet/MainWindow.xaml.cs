@@ -1,4 +1,5 @@
 ﻿using FontAwesome.WPF;
+using Microsoft.Maps.MapControl.WPF;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -21,13 +22,20 @@ namespace Optimeet
     public partial class MainWindow : Window
     {
         MapsHelper helper;
+        MapLayer mapLayer;
+        FileManager fm;
+
+        public int FinalChoice { get; private set; }
+
         public MainWindow()
         {
             InitializeComponent();
+            helper = MapsHelper.GetInstance();
+            fm = FileManager.GetInstance();
+            mapLayer = new MapLayer();
+            ApplicationMap.Children.Add(mapLayer);
             ResetViews();
             LoadContactsUI();
-            helper = MapsHelper.GetInstance();
-            FileManager fm = FileManager.GetInstance();
             //Contact p1 = new Contact("Ben");
             //p1.SetLocation(32.0267904f, 34.7579567f);
             //Contact p2 = new Contact("Michael");
@@ -69,6 +77,15 @@ namespace Optimeet
             CreateMenu.Visibility = Visibility.Collapsed;
             SaveMenu.Visibility = Visibility.Collapsed;
             SuggestionsScroll.Visibility = Visibility.Collapsed;
+            ContactWindow.Visibility = Visibility.Collapsed;
+            SettingsMenu.Visibility = Visibility.Collapsed;
+            ContactCreateMenu.Visibility = Visibility.Collapsed;
+            //Hide floating elements
+            ContactBookBackButton.Visibility = Visibility.Collapsed;
+            AddContactButton.Visibility = Visibility.Collapsed;
+            //Clear elements
+            mapLayer.Children.Clear();
+            ContactList.Children.Clear();
         }
 
         private void ComboBoxStartUpHrs(object sender, RoutedEventArgs e)
@@ -136,6 +153,7 @@ namespace Optimeet
 
         private void CreateMeeting(object sender, RoutedEventArgs e)
         {
+            ResetViews();
             HistoryButton.Visibility = Visibility.Collapsed;
             SettingsButton.Visibility = Visibility.Collapsed;
             InfoButton.Visibility = Visibility.Collapsed;
@@ -143,24 +161,44 @@ namespace Optimeet
             SaveMenu.Visibility = Visibility.Visible;
             CreateButton.IsEnabled = false;
             AddContactList();
+            foreach (CheckBox box in ContactList.Children)
+                box.Click += (object sender2, RoutedEventArgs e2) =>
+                 {
+                     if ((bool)box.IsChecked) {
+                         Location l = ((Contact)box.Content).GetLocation();
+                         Pushpin p = new Pushpin()
+                         {
+                             Height = 20,
+                             Width = 20,
+                             Location = new Microsoft.Maps.MapControl.WPF.Location(l.Latitude, l.Longitude)
+                         };
+                         //Create a template for a contact pushpin
+                         ControlTemplate t = new ControlTemplate(typeof(Pushpin));
+                         FrameworkElementFactory elemFactory = new FrameworkElementFactory(typeof(Border));
+                         elemFactory.SetValue(Border.CornerRadiusProperty, new CornerRadius(20));
+                         elemFactory.SetValue(Border.BorderBrushProperty, Brushes.Transparent);
+                         elemFactory.SetValue(Border.BackgroundProperty, Brushes.PeachPuff);
+                         elemFactory.SetValue(HeightProperty, 20.0);
+                         elemFactory.SetValue(WidthProperty, 20.0);
+                         elemFactory.SetValue(Border.BorderBrushProperty, Brushes.White);
+                         elemFactory.SetValue(Border.BorderThicknessProperty, new Thickness(1));
+                         FrameworkElementFactory textFactory = new FrameworkElementFactory(typeof(TextBlock));
+                         textFactory.SetValue(HorizontalAlignmentProperty, HorizontalAlignment.Center);
+                         textFactory.SetValue(VerticalAlignmentProperty, VerticalAlignment.Center);
+                         textFactory.SetValue(TextBlock.ForegroundProperty, Brushes.Black);
+                         textFactory.SetValue(TextBlock.TextProperty, ((Contact)box.Content).Name.Substring(0, 2));
+                         elemFactory.AppendChild(textFactory);
+                         t.VisualTree = elemFactory;
+                         p.Template = t;
+                         ApplicationMap.SetView(p.Location, 15f);
+                         mapLayer.Children.Add(p);
+                     }
+                 };
         }
 
         private void AddContactList()
         {
-            List<Contact> p = new List<Contact>();
-            Contact p1 = new Contact("Ben");
-            p1.SetLocation(32.0267904f, 34.7579567f);
-            Contact p2 = new Contact("Michael");
-            p2.SetLocation(32.0496376f, 34.8059143f);
-            Contact p3 = new Contact("Leon");
-            p3.SetLocation(31.9770394f, 34.7695861f);
-            Contact p4 = new Contact("Evgeniy");
-            p4.SetLocation(32.432225f, 34.920580f);
-            p.Add(p1);
-            p.Add(p2);
-            p.Add(p3);
-            p.Add(p4);
-            foreach (Contact person in p)
+            foreach (Contact person in fm.Contacts.GetChildren())
             {
                 CheckBox box = new CheckBox();
                 box.Content = person;
@@ -208,9 +246,9 @@ namespace Optimeet
 
         }
 
-        private void OpenSettings(object sender, RoutedEventArgs e)
+        private void OpenCloseSettings(object sender, RoutedEventArgs e)
         {
-
+            SettingsMenu.Visibility = SettingsMenu.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
         }
 
         private void OpenAbout(object sender, RoutedEventArgs e)
@@ -221,13 +259,13 @@ namespace Optimeet
         private void CancelMeeting(object sender, RoutedEventArgs e)
         {
             ResetViews();
-
+            ApplicationMap.Children.Clear();
         }
 
         private void SaveMeeting(object sender, RoutedEventArgs e)
         {
             Meeting m;
-            String subject = MeetingSubject.Text;
+            string subject = MeetingSubject.Text;
             DateTime date = DateTime.MinValue;
             if (DateTimePicker1.SelectedDate != null)
             {
@@ -236,16 +274,25 @@ namespace Optimeet
                 date = date.AddMinutes(double.Parse(MinutesBox.Text));
             }
             List<Contact> participants = new List<Contact>();
-            foreach(CheckBox box in ContactList.Children)
+            foreach (CheckBox box in ContactList.Children)
                 if (box.IsChecked == true)
                     participants.Add((Contact)box.Content);
             string error = ValidateMeeting(subject, date, participants);
             if (error == null)
             {
                 m = new Meeting(subject, date, participants);
+                if (!((Button)sender).Tag.Equals(""))
+                {
+                    fm.Meetings.Add(m);
+                    fm.SaveMeetings();
+                    MeetingSaveButton.Tag = "";
+                    ResetViews();
+                    MessageBox.Show("Meeting was saved successfully.");
+                }
                 CreateMenu.Visibility = Visibility.Collapsed;
                 MeetingLoadingIcon.Visibility = Visibility.Visible;
                 ShowSuggestions(m);
+                MeetingSaveButton.Tag = FinalChoice;
             }
             else
             {
@@ -260,58 +307,67 @@ namespace Optimeet
         private async void ShowSuggestions(Meeting m)
         {
         Location[] results = await m.SuggestLocations(MeetingPlaceFilter.Text);
-            for (int i = 0; i < results.Length; i++)
+        for (int i = 0; i < results.Length; i++)
+        {
+            //Build the box
+            Image img = new Image();
+            img.Source = await helper.BitmapImageFromUrl(results[i].PhotoReference); 
+            TextBlock PlaceTitle = new TextBlock();
+            PlaceTitle.Text = results[i].Name;
+            PlaceTitle.Margin = new Thickness(0, 5, 0, 0);
+            TextBlock PlaceAddress = new TextBlock();
+            PlaceAddress.Text = results[i].Address;
+            StackPanel reviews = new StackPanel();
+            reviews.Orientation = Orientation.Horizontal;
+            Image fa = new Image();
+            fa.Source=ImageAwesome.CreateImageSource(FontAwesomeIcon.Star, Brushes.Gray);
+            fa.Width = 10;
+            fa.Height = 10;
+            TextBlock description = new TextBlock();
+            description.Text = results[i].Rating + " (" + results[i].ReviewCount + " reviews)";
+            description.Margin = new Thickness(3, 0, 0, 0);
+            reviews.Children.Add(fa);
+            reviews.Children.Add(description);
+            //Add children
+            StackPanel panel = new StackPanel();
+            panel.Orientation = Orientation.Vertical;
+            panel.Children.Add(img);
+            panel.Children.Add(PlaceTitle);
+            panel.Children.Add(PlaceAddress);
+            panel.Children.Add(reviews);
+            img.Width = panel.Width;
+            img.Height = 85;
+            panel.Children[0] = img;
+            //Encapsulate in button and add to list
+            Button b = new Button();
+            b.Content = panel;
+            b.Name = "option" + i;
+            b.Template = (ControlTemplate)FindResource("NoMouseOverButtonTemplate");
+            b.Background = Brushes.LightGray;
+            b.Margin = new Thickness(10,0,0,0);
+            SuggestionsList.Children.Add(b);
+            Pushpin p = new Pushpin();
+            p.Content = new TextBlock()
             {
-                //Build the box
-                Image img = new Image();
-                img.Source = await helper.BitmapImageFromUrl(results[i].PhotoReference); 
-                TextBlock PlaceTitle = new TextBlock();
-                PlaceTitle.Text = results[i].Name;
-                PlaceTitle.Margin = new Thickness(0, 5, 0, 0);
-                TextBlock PlaceAddress = new TextBlock();
-                PlaceAddress.Text = results[i].Address;
-                StackPanel reviews = new StackPanel();
-                reviews.Orientation = Orientation.Horizontal;
-                Image fa = new Image();
-                fa.Source=ImageAwesome.CreateImageSource(FontAwesomeIcon.Star, Brushes.Gray);
-                fa.Width = 10;
-                fa.Height = 10;
-                TextBlock description = new TextBlock();
-                description.Text = results[i].Rating + " (" + results[i].ReviewCount + " reviews)";
-                description.Margin = new Thickness(3, 0, 0, 0);
-                reviews.Children.Add(fa);
-                reviews.Children.Add(description);
-                //Add children
-                StackPanel panel = new StackPanel();
-                panel.Orientation = Orientation.Vertical;
-                panel.Children.Add(img);
-                panel.Children.Add(PlaceTitle);
-                panel.Children.Add(PlaceAddress);
-                panel.Children.Add(reviews);
-                img.Width = panel.Width;
-                img.Height = 85;
-                panel.Children[0] = img;
-                //Encapsulate in button and add to list
-                Button b = new Button();
-                b.Content = panel;
-                b.Name = "option" + i;
-                b.Template = (ControlTemplate)FindResource("NoMouseOverButtonTemplate");
-                b.Background = Brushes.LightGray;
-                b.Margin = new Thickness(10,0,0,0);
-                SuggestionsList.Children.Add(b);
+                Text = (i+1).ToString()
+            };
+            p.Location = new Microsoft.Maps.MapControl.WPF.Location(results[i].Latitude, results[i].Longitude);
+            ApplicationMap.Children.Add(p);
+            b.Click += (object sender, RoutedEventArgs args) => {
+                Highlight(b);
+                FinalChoice = i;
+                ApplicationMap.SetView(p.Location, 17.6f);
+                foreach (Button btn in SuggestionsList.Children)
+                {
+                    if (btn != b)
+                        Unhighlight(btn);
+                }
+            };
+            if(i==0)
+                ApplicationMap.SetView(p.Location, 17.6f);
+
             }
-            foreach(Button b in SuggestionsList.Children)
-            {
-                b.Click += (object sender, RoutedEventArgs args)=> {
-                    Highlight(b); 
-                    foreach(Button btn in SuggestionsList.Children)
-                    {
-                        if (btn != b)                  
-                            Unhighlight(btn);
-                    }
-                        };
-            }
-        MeetingSaveButton.Content = "Save";
+            MeetingSaveButton.Content = "Save";
         MeetingLoadingIcon.Visibility = Visibility.Collapsed;
         SuggestionsScroll.Visibility = Visibility.Visible;
         }
@@ -329,7 +385,7 @@ namespace Optimeet
 
         private void LoadContactsUI()
         {
-            Trie<Contact> trContacts = FileManager.GetInstance().Contacts;
+            Trie<Contact> trContacts = fm.Contacts;
             Queue<Contact> qContacts = trContacts.GetChildren();
             while(qContacts.Count > 0)
             { 
@@ -359,23 +415,33 @@ namespace Optimeet
                 };
                 StackPanel ContactPanel = new StackPanel()
                 {
+                    Width=600,
                     Orientation = Orientation.Horizontal,
                     HorizontalAlignment = HorizontalAlignment.Left
                 };
                 Image icEdit = new Image()
                 {
                     Source = new BitmapImage(new Uri(@"/Assets/edit.png", UriKind.Relative)),
-                    Height = 60,
-                    Width = 60,
+                    Height = 25,
+                    Width = 25,
+                    Margin = new Thickness(20,0,0,0),
                     HorizontalAlignment = HorizontalAlignment.Right
+                };
+                icEdit.MouseDown += (object sender, MouseButtonEventArgs e) =>
+                {
+                    
                 };
                 Image icDelete = new Image()
                 {
                     Source = new BitmapImage(new Uri(@"/Assets/delete.png", UriKind.Relative)),
-                    Height = 60,
-                    Width = 60,
-                    Margin = new Thickness(0,0,0,15),
+                    Height = 25,
+                    Width = 25,
                     HorizontalAlignment = HorizontalAlignment.Right
+                };
+                icDelete.MouseDown += (object sender, MouseButtonEventArgs e) =>
+                {
+                    if (MessageBox.Show("Delete Contact", "Do you want to perform this action?", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                        fm.Contacts.Delete(c.Name);
                 };
                 ContactPanel.Children.Add(ContactBorder);
                 ContactPanel.Children.Add(ContactDetails);
@@ -393,6 +459,80 @@ namespace Optimeet
                     Margin = new Thickness(30, 20, 0, 0)
                 };
                 ContactBook.Children.Add(b);
+            }
+        }
+
+        private void ShowContactsBook(object sender, RoutedEventArgs e)
+        {
+            ContactWindow.Visibility = Visibility.Visible;
+            ContactBookBackButton.Visibility = Visibility.Visible;
+            AddContactButton.Visibility = Visibility.Visible;
+        }
+
+        private void CloseContactBook(object sender, RoutedEventArgs e)
+        {
+
+            ContactWindow.Visibility = Visibility.Collapsed;
+            ContactBookBackButton.Visibility = Visibility.Collapsed;
+            AddContactButton.Visibility = Visibility.Collapsed;
+        }
+
+        private void CreateContact(object sender, RoutedEventArgs e)
+        {
+            CloseContactBook(sender, e);
+            ResetViews();
+            HistoryButton.Visibility = Visibility.Collapsed;
+            SettingsButton.Visibility = Visibility.Collapsed;
+            InfoButton.Visibility = Visibility.Collapsed;
+            CreateMenu.Visibility = Visibility.Collapsed;
+            SaveMenu.Visibility = Visibility.Collapsed;
+            CreateButton.Visibility = Visibility.Collapsed;
+            ContactCreateMenu.Visibility = Visibility.Visible;
+
+
+        }
+
+        private void CancelContact(object sender, RoutedEventArgs e)
+        {
+            ResetViews();
+        }
+
+        private void SaveContact(object sender, RoutedEventArgs e)
+        {
+            string name = CreateContact_Name.Text;
+            string mail = CreateContact_Mail.Text;
+            string address = CreateContact_Address.Text;
+            if(mail.Equals(""))
+            {
+                try
+                {
+                    Contact contact = new Contact(name);
+                    string[] loc = CreateContact_Address.Text.Split(',');
+                    contact.SetLocation(float.Parse(loc[0]), float.Parse(loc[1]));
+                }
+                catch(Exception error)
+                {
+                    string caption = "Could not save contact";
+                    MessageBoxButton button = MessageBoxButton.OK;
+                    MessageBoxImage icon = MessageBoxImage.Exclamation;
+                    MessageBox.Show(error.Message, caption, button, icon);
+                }
+            }
+            else
+            {
+                try
+                {
+                    Contact contact = new Contact(name, mail);
+                    string[] loc = CreateContact_Address.Text.Split(',');
+                    contact.SetLocation(float.Parse(loc[0]), float.Parse(loc[1]));
+                }
+                catch (Exception error)
+                {
+                    string caption = "Could not save contact";
+                    MessageBoxButton button = MessageBoxButton.OK;
+                    MessageBoxImage icon = MessageBoxImage.Exclamation;
+                    MessageBox.Show(error.Message, caption, button, icon);
+                }
             }
         }
     }

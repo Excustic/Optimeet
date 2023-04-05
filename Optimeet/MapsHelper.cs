@@ -74,7 +74,9 @@ namespace Optimeet
             for (int i = 0; i < reccomendations.Length; i++)
             {
                 dist[i] = reccomendations[i].DistanceTo(Centroid);
-                d.Add(dist[i], reccomendations[i]);
+                if(d.ContainsKey(dist[i]))
+                    d.Add(dist[i]+0.1, reccomendations[i]);
+                else d.Add(dist[i], reccomendations[i]);
             }
             Array.Sort(dist);
             Location[] TopN = new Location[numOfResults];

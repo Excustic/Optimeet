@@ -4,6 +4,12 @@
              xmlns:local="clr-namespace:Optimeet"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
+        <ControlTemplate x:Key="PushPinTemplate">
+            <Border Height="20" Width="20" BorderBrush="Transparent" Background="Silver" CornerRadius="20">
+                
+            </Border>
+        </ControlTemplate>
+
         <ControlTemplate x:Key="NoMouseOverButtonTemplate" 
                  TargetType="Button">
             <Border Background="{TemplateBinding Background}"

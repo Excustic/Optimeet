@@ -2,6 +2,7 @@
 using System;
 using System.Device.Location;
 using System.Linq;
+using System.Net.Mail;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
@@ -67,11 +68,18 @@ namespace Optimeet
             }
         }
         [DataMember]
+        public MailAddress Email { get; set; }
+        [DataMember]
         private Location SavedLocation;
-        public Contact(string n)
+        public Contact(string name)
         {
-            Name = n;
+            Name = name;
             SavedLocation = new Location();
+        }
+        public Contact(string name, string email)
+        {
+            Name = name;
+            Email = new MailAddress(email);
         }
         public async void SetLocation(float lat, float lon, string Address="Address Unavailable", string Name = null, string PhotoReference = null)
         {
