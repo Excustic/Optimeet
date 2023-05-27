@@ -68,18 +68,22 @@ namespace Optimeet
             }
         }
         [DataMember]
-        public MailAddress Email { get; set; }
+        public string Email { get; set; }
         [DataMember]
         private Location SavedLocation;
-        public Contact(string name)
+        public Contact(string name, string email = null)
         {
             Name = name;
-            SavedLocation = new Location();
-        }
-        public Contact(string name, string email)
-        {
-            Name = name;
-            Email = new MailAddress(email);
+            if(email != null || email.Length == 0)
+                try
+                {
+                    _ = new MailAddress(email);
+                    Email = email;
+                }
+                catch (Exception)
+                {
+                    throw new Exception("Invalid mail");
+                }
         }
         public async void SetLocation(float lat, float lon, string Address="Address Unavailable", string Name = null, string PhotoReference = null)
         {
@@ -90,6 +94,10 @@ namespace Optimeet
                 SavedLocation.Address = await MapsHelper.GetInstance().ReverseGeocode(lat, lon);
             SavedLocation.Name = Name;
             SavedLocation.PhotoReference = PhotoReference;
+        }
+        public async void SetLocation(Location l)
+        {
+            SavedLocation = l;
         }
         public Location GetLocation()
         {

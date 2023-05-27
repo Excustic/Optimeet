@@ -14,9 +14,12 @@ namespace Optimeet
 {
     public sealed class MapsHelper
     {
-        private static string baseUrlGC = "http://api.positionstack.com/v1/reverse?access_key={0}&query={1},{2}&fields=results.label&limit=1"; // part1 of the URL for GeoCoding
+        private static string baseUrlGC = "https://maps.googleapis.com/maps/api/geocode/json?address={0}&key=" + GKey; 
+        private static string baseUrlRGC = "http://api.positionstack.com/v1/reverse?access_key={0}&query={1},{2}&fields=results.label&limit=1"; 
         private static string baseUrlPR = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?keyword={0}&location={1},{2}&radius={3}&key=" + GKey;
         private static string baseUrlPhotoRequest = "https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=400&photo_reference={0}&key=" + GKey;
+        private static string AutocompleteRequest = "https://maps.googleapis.com/maps/api/place/autocomplete/json?input={0}&types={1}&key=" + GKey;
+        private static string filter = "geocode";
         const string ApiKey = "2b06ea680225d5c6118150af3a7add6a";
         const string GKey = "AIzaSyDHsDcQteVBMyFed1sVfqYpR4jFQ6BFjr4";
         const string ReviewCount = "user_ratings_total";
@@ -30,10 +33,28 @@ namespace Optimeet
                 _instance = new MapsHelper();
             return _instance;
         }
+        public async Task<Location> Geocode(string address)
+        {
+            try
+            {
+                var url = String.Format(baseUrlGC, address);
+                string result = await GetAsync(url);
+                JObject res = JsonConvert.DeserializeObject<JObject>(result);
+                // return Location struct by extracting the latitude and longitude from the JSON object
+                return new Location() 
+                { Latitude = float.Parse(res["results"][0]["geometry"]["location"]["lat"].ToString()), 
+                    Longitude = float.Parse(res["results"][0]["geometry"]["location"]["lng"].ToString()) };
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("ReverseGeocode failed: " + e.Message);
+            }
+            return new Location();
+        }
         public async Task<string> ReverseGeocode(float Latitude, float Longitude)
         {
             try { 
-                var url = String.Format(baseUrlGC, ApiKey, Latitude, Longitude);
+                var url = String.Format(baseUrlRGC, ApiKey, Latitude, Longitude);
                 string result = await GetAsync(url);
                 JObject res = JsonConvert.DeserializeObject<JObject>(result);
                 return res["data"][0]["label"].ToString();
@@ -41,6 +62,24 @@ namespace Optimeet
             catch (Exception e)
             {
                 Console.WriteLine("ReverseGeocode failed: "+e.Message);
+            }
+            return null;
+        }
+        public async Task<List<string>> SearchLocation(string address)
+        {
+            try
+            {
+                var url = String.Format(AutocompleteRequest, address, filter);
+                string result = await GetAsync(url);
+                JArray res = JArray.Parse(JsonConvert.DeserializeObject<JObject>(result)["predictions"].ToString()); //Nested serialization inside another - this gets me the list of outputs only
+                List<string> PlaceResults = new List<string>();
+                foreach(JObject obj in res)
+                    PlaceResults.Add(obj["description"].ToString());
+                return PlaceResults;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("AutoComplete failed: " + e.Message);
             }
             return null;
         }

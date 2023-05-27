@@ -19,7 +19,7 @@ namespace Optimeet
         const int ALPHABET_FIRST_INDEX = 97;
         public void Add(string name, T value)
         {
-            name = name.ToLower().Replace(" ","");
+            name = FormatName(name);
             TrieNode<T> temp = _root;
             char key;
             for (int i = 0; i < name.Length-1; i++)
@@ -57,7 +57,7 @@ namespace Optimeet
         }
 
         private TrieNode<T> FindNode(string name, TrieNode<T> temp)
-        {
+        {            
             return name.Length == 1 ? temp.children[cti(name[0])] : FindNode(name.Substring(1), temp.children[cti(name[0])]);
         }
 
@@ -68,6 +68,7 @@ namespace Optimeet
 
         public void Delete(string name)
         {
+            name = FormatName(name);
             TrieNode<T> node = FindNode(name, _root);
             if (node.count > 0)
                 node.Value = default;
@@ -78,23 +79,32 @@ namespace Optimeet
             }
         }
 
+        private string FormatName(string name)
+        {
+            //All names are stored with lowercase characters without spaces
+            return name.ToLower().Replace(" ", "");
+        }
+
         private void RemoveNodeChain(TrieNode<T> node, TrieNode<T> temp)
         {
-            int i = 0, j = temp.count;
-            if (temp.count != 0)
-                while (i < temp.children.Length && j > 0)
-                {
-                    j = temp.children[i] == null ? j : j-1;
-                    if (temp.children[i] == node)
+            if (temp != null)
+            {
+                int i = 0, j = temp.count;
+                if (temp.count != 0)
+                    while (i < temp.children.Length && j > 0)
                     {
-                        temp.children[i] = null;
-                        temp.count--;
-                        return;
+                        j = temp.children[i] == null ? j : j - 1;
+                        if (temp.children[i] == node)
+                        {
+                            temp.children[i] = null;
+                            temp.count--;
+                            return;
+                        }
+                        else RemoveNodeChain(node, temp.children[i]);
+                        i++;
                     }
-                    else RemoveNodeChain(node, temp.children[i]);
-                    i++;
-                }
-            return;
+            }
+                return;
         }
 
         public Queue<string> GetChildrenNames()

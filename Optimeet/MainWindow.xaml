@@ -81,9 +81,10 @@
                     <StackPanel Orientation="Horizontal" Margin="15,5,0,0">
                         <TextBox x:Name="CreateContact_Address" FontSize="18" Width="200"></TextBox>
                         <Button x:Name="SearchButtonAddress" HorizontalAlignment="Right" Template="{StaticResource NoMouseOverButtonTemplate}" BorderBrush="Transparent" Background="Transparent" MouseEnter="Highlight" MouseLeave="Unhighlight">
-                            <Image  Source="Assets/search.png" Height="25px" Margin="10,0,0,0"/>
+                            <Image  Source="Assets/search.png" Height="25px" Margin="10,0,0,0" MouseLeftButtonDown="JumpToAddress"/>
                         </Button>
                     </StackPanel>
+                    <ListBox x:Name="CreateContact_List" FontSize="18" Width="200" HorizontalAlignment="Left" Margin="15,0,0,0" ></ListBox>
                     <StackPanel Orientation="Horizontal" x:Name="SaveContactButtonMenu" Margin="40,20,0,0" HorizontalAlignment="Left">
                         <Button Margin="0,0,10,0" Click="CancelContact">Cancel</Button>
                         <Button x:Name="ContactSaveButton" Tag="" Margin="10,0,0,0" Click="SaveContact">Save contact</Button>

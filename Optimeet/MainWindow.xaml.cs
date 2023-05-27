@@ -24,6 +24,7 @@ namespace Optimeet
         MapsHelper helper;
         MapLayer mapLayer;
         FileManager fm;
+        private Location CreateContactLocation;
 
         public int FinalChoice { get; private set; }
 
@@ -173,27 +174,33 @@ namespace Optimeet
                              Location = new Microsoft.Maps.MapControl.WPF.Location(l.Latitude, l.Longitude)
                          };
                          //Create a template for a contact pushpin
-                         ControlTemplate t = new ControlTemplate(typeof(Pushpin));
-                         FrameworkElementFactory elemFactory = new FrameworkElementFactory(typeof(Border));
-                         elemFactory.SetValue(Border.CornerRadiusProperty, new CornerRadius(20));
-                         elemFactory.SetValue(Border.BorderBrushProperty, Brushes.Transparent);
-                         elemFactory.SetValue(Border.BackgroundProperty, Brushes.PeachPuff);
-                         elemFactory.SetValue(HeightProperty, 20.0);
-                         elemFactory.SetValue(WidthProperty, 20.0);
-                         elemFactory.SetValue(Border.BorderBrushProperty, Brushes.White);
-                         elemFactory.SetValue(Border.BorderThicknessProperty, new Thickness(1));
-                         FrameworkElementFactory textFactory = new FrameworkElementFactory(typeof(TextBlock));
-                         textFactory.SetValue(HorizontalAlignmentProperty, HorizontalAlignment.Center);
-                         textFactory.SetValue(VerticalAlignmentProperty, VerticalAlignment.Center);
-                         textFactory.SetValue(TextBlock.ForegroundProperty, Brushes.Black);
-                         textFactory.SetValue(TextBlock.TextProperty, ((Contact)box.Content).Name.Substring(0, 2));
-                         elemFactory.AppendChild(textFactory);
-                         t.VisualTree = elemFactory;
+                         ControlTemplate t = CreateTemplatePushpin(box);
                          p.Template = t;
                          ApplicationMap.SetView(p.Location, 15f);
                          mapLayer.Children.Add(p);
                      }
                  };
+        }
+
+        private ControlTemplate CreateTemplatePushpin(CheckBox box)
+        {
+            ControlTemplate t = new ControlTemplate(typeof(Pushpin));
+            FrameworkElementFactory elemFactory = new FrameworkElementFactory(typeof(Border));
+            elemFactory.SetValue(Border.CornerRadiusProperty, new CornerRadius(20));
+            elemFactory.SetValue(Border.BorderBrushProperty, Brushes.Transparent);
+            elemFactory.SetValue(Border.BackgroundProperty, Brushes.PeachPuff);
+            elemFactory.SetValue(HeightProperty, 20.0);
+            elemFactory.SetValue(WidthProperty, 20.0);
+            elemFactory.SetValue(Border.BorderBrushProperty, Brushes.White);
+            elemFactory.SetValue(Border.BorderThicknessProperty, new Thickness(1));
+            FrameworkElementFactory textFactory = new FrameworkElementFactory(typeof(TextBlock));
+            textFactory.SetValue(HorizontalAlignmentProperty, HorizontalAlignment.Center);
+            textFactory.SetValue(VerticalAlignmentProperty, VerticalAlignment.Center);
+            textFactory.SetValue(TextBlock.ForegroundProperty, Brushes.Black);
+            textFactory.SetValue(TextBlock.TextProperty, ((Contact)box.Content).Name.Substring(0, 2));
+            elemFactory.AppendChild(textFactory);
+            t.VisualTree = elemFactory;
+            return t;
         }
 
         private void AddContactList()
@@ -387,16 +394,17 @@ namespace Optimeet
         {
             Trie<Contact> trContacts = fm.Contacts;
             Queue<Contact> qContacts = trContacts.GetChildren();
+            int contacts = qContacts.Count+1;
             while(qContacts.Count > 0)
             { 
                 Contact c = qContacts.Dequeue();
                 //Build the box
-                TextBlock ContactDetails = new TextBlock()
+                TextBlock tbContactName = new TextBlock()
                 {
                     VerticalAlignment = VerticalAlignment.Center,
                     Margin = new Thickness(20,0,0,0),
                     FontSize = 22,
-                    Text = c.ToString()
+                    Text = c.Name
                 };
                 Border ContactBorder = new Border
                 {
@@ -429,7 +437,10 @@ namespace Optimeet
                 };
                 icEdit.MouseDown += (object sender, MouseButtonEventArgs e) =>
                 {
-                    
+                    Image ic = sender as Image;
+                    ic.Tag = c.Name+","+c.Email+","+c.GetLocation().Address;
+                    CreateContact(ic, e);
+
                 };
                 Image icDelete = new Image()
                 {
@@ -441,17 +452,50 @@ namespace Optimeet
                 icDelete.MouseDown += (object sender, MouseButtonEventArgs e) =>
                 {
                     if (MessageBox.Show("Delete Contact", "Do you want to perform this action?", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
-                        fm.Contacts.Delete(c.Name);
+                       {
+                            fm.Contacts.Delete(c.Name);
+                            ContactBook.Children.Clear();
+                            fm.SaveContacts();
+                            LoadContactsUI();
+                       } 
                 };
+                StackPanel ContactPanel2 = new StackPanel()
+                {
+                    Orientation = Orientation.Vertical,
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+                TextBlock tbContactAddress = new TextBlock()
+                {
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(20, 0, 0, 0),
+                    FontSize = 18,
+                    Foreground = Brushes.Gray,
+                    Text = c.GetLocation().Address
+                };
+                TextBlock tbContactMail = new TextBlock()
+                {
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(20, 0, 0, 0),
+
+                    FontSize = 18,
+                    Foreground = Brushes.Gray,
+                    Text = c.Email
+                };
+                ContactPanel2.Children.Add(tbContactName);
+                ContactPanel2.Children.Add(tbContactAddress);
+                ContactPanel2.Children.Add(tbContactMail);
                 ContactPanel.Children.Add(ContactBorder);
-                ContactPanel.Children.Add(ContactDetails);
+                ContactPanel.Children.Add(ContactPanel2);
                 ContactPanel.Children.Add(icEdit);
                 ContactPanel.Children.Add(icDelete);
                 //Encapsulate in button and add to list
                 Button b = new Button
                 {
                     Content = ContactPanel,
-                    Name = "bt_" + "",
+                    Name = "bt_" + (contacts-qContacts.Count),
                     Template = (ControlTemplate)FindResource("NoMouseOverButtonTemplate"),
                     Background = Brushes.Transparent,
                     BorderBrush = Brushes.Transparent,
@@ -487,8 +531,20 @@ namespace Optimeet
             CreateMenu.Visibility = Visibility.Collapsed;
             SaveMenu.Visibility = Visibility.Collapsed;
             CreateButton.Visibility = Visibility.Collapsed;
-            ContactCreateMenu.Visibility = Visibility.Visible;
 
+            //if edit was pressed
+            Image ic = sender as Image;
+            if (ic!=null && ic.Tag!=null)
+            {
+                string[] args = ic.Tag.ToString().Split(',');
+                CreateContact_Name.Text = args[0];
+                CreateContact_Mail.Text = args[1];
+                CreateContact_Address.Text = args[2];
+                ContactSaveButton.Tag = args[0];
+            }
+
+            ContactCreateMenu.Visibility = Visibility.Visible;
+            
 
         }
 
@@ -501,38 +557,76 @@ namespace Optimeet
         {
             string name = CreateContact_Name.Text;
             string mail = CreateContact_Mail.Text;
-            string address = CreateContact_Address.Text;
-            if(mail.Equals(""))
+            try
             {
-                try
+                if(CreateContactLocation.Address == null)
                 {
-                    Contact contact = new Contact(name);
-                    string[] loc = CreateContact_Address.Text.Split(',');
-                    contact.SetLocation(float.Parse(loc[0]), float.Parse(loc[1]));
+                    throw new Exception("Please fill in or enter a valid address");
                 }
-                catch(Exception error)
+                Contact contact = new Contact(name, mail);
+                contact.SetLocation(CreateContactLocation);
+                fm.Contacts.Add(contact.Name, contact);
+                //if the contact that is being saved exists already and was edited
+                if (ContactSaveButton.Tag != null && !ContactSaveButton.Tag.Equals(""))
                 {
-                    string caption = "Could not save contact";
-                    MessageBoxButton button = MessageBoxButton.OK;
-                    MessageBoxImage icon = MessageBoxImage.Exclamation;
-                    MessageBox.Show(error.Message, caption, button, icon);
+                    fm.Contacts.Delete(ContactSaveButton.Tag.ToString());
+                    ContactSaveButton.Tag = "";
+                }
+                fm.SaveContacts();
+                ApplicationMap.Children.Clear();
+                //Clear data in Create Contact window
+                CreateContact_Address.Text = "";
+                CreateContact_Mail.Text = "";
+                CreateContact_List.Items.Clear();
+                CreateContact_Name.Text = "";
+                //Get back to menu
+                ResetViews();
+                //Apply the addition and reopen contact menu
+                ContactBook.Children.Clear();
+                LoadContactsUI();
+                ShowContactsBook(sender, e);
+            }
+            catch (Exception error)
+            {
+                string caption = "Could not save contact";
+                MessageBoxButton button = MessageBoxButton.OK;
+                MessageBoxImage icon = MessageBoxImage.Exclamation;
+                MessageBox.Show(error.Message, caption, button, icon);
+            }
+            
+        }
+
+        private async void JumpToAddress(object sender, MouseButtonEventArgs e)
+        {
+            if (CreateContact_Address.Text.Length > 3)
+            {
+                CreateContact_List.Items.Clear();
+                List<string> suggestions = await helper.SearchLocation(CreateContact_Address.Text);
+                foreach (string suggestion in suggestions)
+                {
+                    ListBoxItem temp = new ListBoxItem() { Content = suggestion };
+                    temp.Selected += CreateContact_List_Selected;
+                    CreateContact_List.Items.Add(temp);
                 }
             }
             else
+                CreateContact_List.Items.Clear();
+        }
+
+        private async void CreateContact_List_Selected(object sender, RoutedEventArgs e)
+        {
+            ListBoxItem item = e.Source as ListBoxItem;
+            if (item != null)
             {
-                try
+                CreateContact_Address.Text = item.Content.ToString();
+                CreateContactLocation = await helper.Geocode(CreateContact_Address.Text);
+                CreateContactLocation.Address = CreateContact_Address.Text;
+                Pushpin p = new Pushpin()
                 {
-                    Contact contact = new Contact(name, mail);
-                    string[] loc = CreateContact_Address.Text.Split(',');
-                    contact.SetLocation(float.Parse(loc[0]), float.Parse(loc[1]));
-                }
-                catch (Exception error)
-                {
-                    string caption = "Could not save contact";
-                    MessageBoxButton button = MessageBoxButton.OK;
-                    MessageBoxImage icon = MessageBoxImage.Exclamation;
-                    MessageBox.Show(error.Message, caption, button, icon);
-                }
+                    Location = new Microsoft.Maps.MapControl.WPF.Location(CreateContactLocation.Latitude, CreateContactLocation.Longitude)
+                };
+                ApplicationMap.SetView(p.Location, 17f);
+                ApplicationMap.Children.Add(p);            
             }
         }
     }

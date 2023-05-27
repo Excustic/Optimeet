@@ -8,7 +8,7 @@ namespace Optimeet
 {
     [DataContract]
     [KnownType(typeof(SortedSet<Meeting>))]
-    public class Meeting:IComparable<DateTime>
+    public class Meeting:IComparable<Meeting>
     {
         [DataMember]
         public string Title { get; set; }
@@ -109,9 +109,9 @@ namespace Optimeet
             return Title + " meeting, on the " + MeetingDate.ToString() + ", at " + MeetingLocation.Address + ". Attending: " + names;
         }
 
-        public int CompareTo(DateTime other)
+        public int CompareTo(Meeting m)
         {
-            return DateTime.Compare(MeetingDate, other);
+            return DateTime.Compare(MeetingDate, m.MeetingDate);
         }
     }
 }

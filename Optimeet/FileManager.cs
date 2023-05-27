@@ -40,6 +40,7 @@ namespace Optimeet
             {
                 Indent = true,
                 IndentChars = "\t",
+                
             };
             if (!Directory.Exists(path_contacts))
             { 
@@ -57,7 +58,7 @@ namespace Optimeet
             if (File.Exists(path_contacts))
             {
                 var fileStream = new FileStream(path_contacts, FileMode.Open);
-                var reader = XmlDictionaryReader.CreateTextReader(fileStream, new XmlDictionaryReaderQuotas());
+                var reader = XmlDictionaryReader.CreateTextReader(fileStream, new XmlDictionaryReaderQuotas() { MaxDepth = 200});
                 var serializer = new DataContractSerializer(typeof(Trie<Contact>));
                 Trie<Contact> serializableObject = (Trie<Contact>)serializer.ReadObject(reader, true);
                 reader.Close();
