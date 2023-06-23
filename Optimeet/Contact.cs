@@ -95,7 +95,7 @@ namespace Optimeet
             SavedLocation.Name = Name;
             SavedLocation.PhotoReference = PhotoReference;
         }
-        public async void SetLocation(Location l)
+        public void SetLocation(Location l)
         {
             SavedLocation = l;
         }

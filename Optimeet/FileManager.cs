@@ -79,7 +79,7 @@ namespace Optimeet
                 fileStream.Close();
                 Meetings = serializableObject;
             }
-            else Meetings = new SortedSet<Meeting>();
+            else Meetings = new SortedSet<Meeting>(new MeetingComparer());
         }
 
 
@@ -101,5 +101,14 @@ namespace Optimeet
             serializer.WriteObject(writer, Meetings);
             writer.Close();
         }      
+    }
+
+    internal class MeetingComparer : IComparer<Meeting>
+    {
+        public int Compare(Meeting m1, Meeting m2)
+        {
+            //Compares two meetings by date
+            return DateTime.Compare(m1.GetMeetingDate(), m2.GetMeetingDate());
+        }
     }
 }

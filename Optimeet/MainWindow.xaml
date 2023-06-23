@@ -10,12 +10,12 @@
         AllowsTransparency="True"
         Background="Transparent"
         mc:Ignorable="d"
-        Title="Optimeet" Height="600" Width="920">
+        Title="Optimeet" Height="600" Width="1120">
     <Border Background="White"
             CornerRadius="30">
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="276"></ColumnDefinition>
+                <ColumnDefinition Width="360"></ColumnDefinition>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
@@ -69,104 +69,134 @@
                     <DropShadowEffect BlurRadius="10" Direction="215" Opacity="0.6"/>
                 </Button.Effect>
             </Button>
-            <StackPanel Orientation="Vertical" Grid.Row="1" Margin="0,10,10,0" VerticalAlignment="Top">
-                <StackPanel x:Name="ContactCreateMenu">
-                    <TextBlock Text="New Contact" HorizontalAlignment="Center" FontSize="26"></TextBlock>
-                    <Border BorderBrush="Gray" BorderThickness="0.8" DockPanel.Dock="Top" Margin="0,10,0,0"/>
-                    <TextBlock Text="Full name:" FontSize="20" Margin="15,10,0,0" HorizontalAlignment="Left"></TextBlock>
-                    <TextBox x:Name="CreateContact_Name" FontSize="18" Width="200" HorizontalAlignment="Left" Margin="15,5,0,0"></TextBox>
-                    <TextBlock Text="Contact mail (optional):" FontSize="20" Margin="15,10,0,0" HorizontalAlignment="Left"></TextBlock>
-                    <TextBox x:Name="CreateContact_Mail" FontSize="18" Width="200" HorizontalAlignment="Left" Margin="15,5,0,0"></TextBox>
-                    <TextBlock Text="Contact address:" FontSize="20" Margin="15,10,0,0" HorizontalAlignment="Left"></TextBlock>
-                    <StackPanel Orientation="Horizontal" Margin="15,5,0,0">
-                        <TextBox x:Name="CreateContact_Address" FontSize="18" Width="200"></TextBox>
-                        <Button x:Name="SearchButtonAddress" HorizontalAlignment="Right" Template="{StaticResource NoMouseOverButtonTemplate}" BorderBrush="Transparent" Background="Transparent" MouseEnter="Highlight" MouseLeave="Unhighlight">
-                            <Image  Source="Assets/search.png" Height="25px" Margin="10,0,0,0" MouseLeftButtonDown="JumpToAddress"/>
+            <DockPanel LastChildFill="True" Grid.Column="0" Grid.Row="1" Grid.IsSharedSizeScope="True" Panel.ZIndex="0" Background="White">
+                <ScrollViewer DockPanel.Dock="Bottom" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Orientation="Vertical" Grid.Row="1" Margin="0,10,10,0" VerticalAlignment="Top">
+                        <StackPanel x:Name="ContactCreateMenu" Visibility="Collapsed">
+                            <TextBlock Text="New Contact" HorizontalAlignment="Center" FontSize="26"></TextBlock>
+                            <Border BorderBrush="Gray" BorderThickness="0.8" DockPanel.Dock="Top" Margin="0,10,0,0"/>
+                            <TextBlock Text="Full name:" FontSize="20" Margin="15,10,0,0" HorizontalAlignment="Left"></TextBlock>
+                            <TextBox x:Name="CreateContact_Name" FontSize="18" Width="200" HorizontalAlignment="Left" Margin="15,5,0,0"></TextBox>
+                            <TextBlock Text="Contact mail (optional):" FontSize="20" Margin="15,10,0,0" HorizontalAlignment="Left"></TextBlock>
+                            <TextBox x:Name="CreateContact_Mail" FontSize="18" Width="200" HorizontalAlignment="Left" Margin="15,5,0,0"></TextBox>
+                            <TextBlock Text="Contact address:" FontSize="20" Margin="15,10,0,0" HorizontalAlignment="Left"></TextBlock>
+                            <StackPanel Orientation="Horizontal" Margin="15,5,0,0">
+                                <TextBox x:Name="CreateContact_Address" FontSize="18" Width="200"></TextBox>
+                                <Button x:Name="SearchButtonAddress" HorizontalAlignment="Right" Template="{StaticResource NoMouseOverButtonTemplate}" BorderBrush="Transparent" Background="Transparent" MouseEnter="Highlight" MouseLeave="Unhighlight">
+                                    <Image  Source="Assets/search.png" Height="25px" Margin="10,0,0,0" MouseLeftButtonDown="JumpToAddress"/>
+                                </Button>
+                            </StackPanel>
+                            <ListBox x:Name="CreateContact_List" FontSize="18" Width="200" HorizontalAlignment="Left" Margin="15,0,0,0" ></ListBox>
+                            <StackPanel Orientation="Horizontal" x:Name="SaveContactButtonMenu" Margin="40,20,0,0" HorizontalAlignment="Left">
+                                <Button Margin="0,0,10,0" Click="CancelContact">Cancel</Button>
+                                <Button x:Name="ContactSaveButton" Tag="" Margin="10,0,0,0" Click="SaveContact">Save contact</Button>
+                            </StackPanel>
+                        </StackPanel>
+                        <Button x:Name="CreateButton" HorizontalAlignment="Left" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" BorderBrush="Transparent" MouseEnter="Highlight" Click="CreateMeeting" MouseLeave="Unhighlight" Height="60" Margin="0,0,0.4,0">
+                            <StackPanel x:Name="MeetingPanel" Orientation="Horizontal" Margin="40,0,0,0">
+                                <Image x:Name="CreateImg" Source="Assets/create.png" Width="40" Margin="0,0,20,0" HorizontalAlignment="Left"/>
+                                <TextBlock Background="Transparent" VerticalAlignment="Center" FontFamily="Helvetica" FontSize="15"  >Create a new meeting</TextBlock>
+                            </StackPanel>
                         </Button>
-                    </StackPanel>
-                    <ListBox x:Name="CreateContact_List" FontSize="18" Width="200" HorizontalAlignment="Left" Margin="15,0,0,0" ></ListBox>
-                    <StackPanel Orientation="Horizontal" x:Name="SaveContactButtonMenu" Margin="40,20,0,0" HorizontalAlignment="Left">
-                        <Button Margin="0,0,10,0" Click="CancelContact">Cancel</Button>
-                        <Button x:Name="ContactSaveButton" Tag="" Margin="10,0,0,0" Click="SaveContact">Save contact</Button>
-                    </StackPanel>
-                </StackPanel>
-                <Button x:Name="CreateButton" HorizontalAlignment="Left" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" BorderBrush="Transparent" MouseEnter="Highlight" Click="CreateMeeting" MouseLeave="Unhighlight" Height="60" Margin="0,0,0.4,0">
-                    <StackPanel x:Name="MeetingPanel" Orientation="Horizontal" Margin="40,0,0,0">
-                        <Image x:Name="CreateImg" Source="Assets/create.png" Width="40" Margin="0,0,20,0" HorizontalAlignment="Left"/>
-                        <TextBlock Background="Transparent" VerticalAlignment="Center" FontFamily="Helvetica" FontSize="15"  >Create a new meeting</TextBlock>
-                    </StackPanel>
-                </Button>
-                <StackPanel Orientation="Vertical" x:Name="CreateMenu" Margin="40,10,0,0" Visibility="Collapsed">
-                    <TextBlock FontWeight="Bold" FontFamily="Lucida Sans">Enter meeting subject</TextBlock>
-                    <TextBox x:Name="MeetingSubject" Margin="0,5,0,10"></TextBox>
-                    <TextBlock FontWeight="Bold" FontFamily="Lucida Sans">Choose type of meeting place</TextBlock>
-                    <ComboBox x:Name="MeetingPlaceFilter" SelectedIndex="0">
-                        <ComboBoxItem x:Name="restaurant">Restaurant</ComboBoxItem>
-                        <ComboBoxItem>Park</ComboBoxItem>
-                        <ComboBoxItem>Cafe</ComboBoxItem>
-                    </ComboBox>
-                    <TextBlock FontWeight="Bold" FontFamily="Lucida Sans">Pick a Time and date</TextBlock>
-                    <StackPanel Orientation="Horizontal" Height="22" Margin="0,5,0,0">
-                        <DatePicker Height="25" HorizontalAlignment="Left" x:Name="DateTimePicker1" VerticalAlignment="Top" Width="110" Margin="0,-1,0,-1.6" />
-                        <ComboBox x:Name="HoursBox" Loaded="ComboBoxStartUpHrs" Height="25" Margin="10,0,0,0" RenderTransformOrigin="0.5,0.5" Width="43" BorderThickness="0"/>
-                        <TextBlock Margin="5,0">:</TextBlock>
-                        <ComboBox x:Name="MinutesBox" Loaded="ComboBoxStartUpMins" Height="25" Margin="0" RenderTransformOrigin="0.5,0.5" Width="43" BorderThickness="0">
-                        </ComboBox>
-                    </StackPanel>
-                    <TextBlock Margin="0,10,0,10" FontWeight="Bold" FontFamily="Lucida Sans">Pick participants from contacts</TextBlock>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                        <TextBox Width="150px" Height="25px"></TextBox>
-                        <Button x:Name="SearchButton" Template="{StaticResource NoMouseOverButtonTemplate}" BorderBrush="Transparent" Background="Transparent" MouseEnter="Highlight" MouseLeave="Unhighlight">
-                            <Image  Source="Assets/search.png" Height="25px" Margin="10,0,0,0"/>
-                        </Button>
-                    </StackPanel>
-                    <ScrollViewer HorizontalAlignment="Left" MaxHeight="100" VerticalScrollBarVisibility="Auto">
-                        <StackPanel x:Name="ContactList"></StackPanel>
-                    </ScrollViewer>
-                </StackPanel>
-                <ScrollViewer HorizontalAlignment="Left" x:Name="SuggestionsScroll" Margin="40,10,0,0" MaxHeight="180" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                    <StackPanel x:Name="SuggestionsList" Orientation="Horizontal" Margin="0,0,0,5">
+                        <StackPanel Orientation="Vertical" x:Name="CreateMenu" Margin="40,10,0,0" Visibility="Collapsed">
+                            <TextBlock FontWeight="Bold" FontFamily="Lucida Sans">Enter meeting subject</TextBlock>
+                            <TextBox x:Name="MeetingSubject" Margin="0,5,0,10"></TextBox>
+                            <TextBlock FontWeight="Bold" FontFamily="Lucida Sans">Choose type of meeting place</TextBlock>
+                            <ComboBox x:Name="MeetingPlaceFilter" SelectedIndex="0">
+                                <ComboBoxItem x:Name="restaurant">Restaurant</ComboBoxItem>
+                                <ComboBoxItem>Park</ComboBoxItem>
+                                <ComboBoxItem>Cafe</ComboBoxItem>
+                            </ComboBox>
+                            <TextBlock FontWeight="Bold" FontFamily="Lucida Sans">Pick a Time and date</TextBlock>
+                            <StackPanel Orientation="Horizontal" Height="22" Margin="0,5,0,0">
+                                <DatePicker Height="25" HorizontalAlignment="Left" x:Name="DateTimePicker1" VerticalAlignment="Top" Width="110" Margin="0,-1,0,-1.6" />
+                                <ComboBox x:Name="HoursBox" Loaded="ComboBoxStartUpHrs" Height="25" Margin="10,0,0,0" RenderTransformOrigin="0.5,0.5" Width="43" BorderThickness="0"/>
+                                <TextBlock Margin="5,0">:</TextBlock>
+                                <ComboBox x:Name="MinutesBox" Loaded="ComboBoxStartUpMins" Height="25" Margin="0" RenderTransformOrigin="0.5,0.5" Width="43" BorderThickness="0">
+                                </ComboBox>
+                            </StackPanel>
+                            <TextBlock Margin="0,10,0,10" FontWeight="Bold" FontFamily="Lucida Sans">Pick participants from contacts</TextBlock>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <TextBox Width="150px" Height="25px"></TextBox>
+                                <Button x:Name="SearchButton" Template="{StaticResource NoMouseOverButtonTemplate}" BorderBrush="Transparent" Background="Transparent" MouseEnter="Highlight" MouseLeave="Unhighlight">
+                                    <Image  Source="Assets/search.png" Height="25px" Margin="10,0,0,0"/>
+                                </Button>
+                            </StackPanel>
+                            <ScrollViewer HorizontalAlignment="Left" MaxHeight="100" VerticalScrollBarVisibility="Auto">
+                                <StackPanel x:Name="ContactList"></StackPanel>
+                            </ScrollViewer>
+                        </StackPanel>
+                        <ScrollViewer HorizontalAlignment="Left" x:Name="SuggestionsScroll" Margin="40,10,0,0" MaxHeight="180" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                            <StackPanel x:Name="SuggestionsList" Orientation="Horizontal" Margin="0,0,0,5">
 
+                            </StackPanel>
+                        </ScrollViewer>
+                        <fa:ImageAwesome x:Name="MeetingLoadingIcon" Visibility="Collapsed" Icon="Spinner" Spin="True" SpinDuration="3" Height="30"/>
+                        <StackPanel Orientation="Horizontal" x:Name="SaveMenu" Margin="40,20,0,0" HorizontalAlignment="Left">
+                            <Button Margin="0,0,10,0" Click="CancelMeeting">Cancel</Button>
+                            <Button x:Name="MeetingSaveButton" Tag="" Margin="10,0,0,0" Click="SaveMeeting">Suggest a meeting place</Button>
+                        </StackPanel>
+
+                        <Button x:Name="MeetingsButton" HorizontalAlignment="Left" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" BorderBrush="Transparent" MouseEnter="Highlight" Click="OpenMeetings" MouseLeave="Unhighlight" Height="60" Margin="0,10,0,0">
+                            <StackPanel Orientation="Horizontal" Margin="40,0,0,0">
+                                <Image x:Name="HistoryImg" Source="Assets/history.png" Width="40" Margin="0,0,20,0" HorizontalAlignment="Left"/>
+                                <TextBlock Background="Transparent" VerticalAlignment="Center" FontFamily="Helvetica" FontSize="15">My meetings</TextBlock>
+                            </StackPanel>
+                        </Button>
+                        <StackPanel Margin="30,0,0,0" x:Name="MeetingsMenu" Visibility="Collapsed">
+                            <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
+                                <TextBlock Text="Future Meetings" FontSize="20" HorizontalAlignment="Left"></TextBlock>
+                                <TextBlock Text="0" Foreground="Gray" x:Name="FutureCount" FontSize="20" Margin="10,0,0,0" HorizontalAlignment="Left"></TextBlock>
+                                <Image Source="Assets/arrow.png" x:Name="FutureArrow" Width="15" Margin="15,0,0,0" MouseDown="ShowFutureM" RenderTransformOrigin=".5,.5" Tag="Collapsed"></Image>
+                            </StackPanel>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel x:Name="FutureList" Visibility="Collapsed"></StackPanel>
+                            </ScrollViewer>
+                            <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
+                                <TextBlock Text="Upcoming Meetings" FontSize="20" HorizontalAlignment="Left"></TextBlock>
+                                <TextBlock Text="0" Foreground="Gray" x:Name="UpcomingCount" FontSize="20" Margin="10,0,0,0" HorizontalAlignment="Left"></TextBlock>
+                                <Image Source="Assets/arrow.png" x:Name="UpcomingArrow" Width="15" Margin="15,0,0,0" MouseDown="ShowUpcomingM" RenderTransformOrigin=".5,.5" Tag="Collapsed"></Image>
+                            </StackPanel>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel x:Name="UpcomingList" Visibility="Collapsed"></StackPanel>
+                            </ScrollViewer>
+                            <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
+                                <TextBlock Text="Past Meetings" FontSize="20"  HorizontalAlignment="Left"></TextBlock>
+                                <TextBlock Text="0" Foreground="Gray" x:Name="PastCount" FontSize="20" Margin="10,0,0,0" HorizontalAlignment="Left"></TextBlock>
+                                <Image Source="Assets/arrow.png" x:Name="PastArrow" Width="15" Margin="15,0,0,0" MouseDown="ShowPastM" RenderTransformOrigin=".5,.5" Tag="Collapsed"></Image>
+                            </StackPanel>
+                            <ScrollViewer  VerticalScrollBarVisibility="Auto">
+                                <StackPanel x:Name="PastList" Visibility="Collapsed"></StackPanel>
+                            </ScrollViewer>
+                        </StackPanel>
+                        <Button x:Name="SettingsButton" HorizontalAlignment="Left" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" BorderBrush="Transparent" MouseEnter="Highlight" Click="OpenCloseSettings" MouseLeave="Unhighlight" Height="60" Margin="0,10,0,0">
+                            <StackPanel Orientation="Horizontal" Margin="40,0,0,0">
+                                <Image x:Name="SettingsImg" Source="Assets/settings.png" Width="40" Margin="0,0,20,0" HorizontalAlignment="Left"/>
+                                <TextBlock Background="Transparent" VerticalAlignment="Center" FontFamily="Helvetica" FontSize="15">Settings</TextBlock>
+                            </StackPanel>
+                        </Button>
+                        <StackPanel Orientation="Vertical" x:Name="SettingsMenu" Margin="40,10,0,0">
+                            <Button x:Name="ContactsButton" Margin="0,0,0,0" Click="ShowContactsBook">My contacts</Button>
+                            <TextBlock TextWrapping="WrapWithOverflow" Margin="0,10,0,0">Number of place suggestions</TextBlock>
+                            <DockPanel VerticalAlignment="Center" Margin="10">
+                                <TextBox Text="{Binding ElementName=slResults, Path=Value, UpdateSourceTrigger=PropertyChanged}" DockPanel.Dock="Right" TextAlignment="Right" Width="40" />
+                                <Slider Maximum="20" Minimum="3" TickPlacement="BottomRight" TickFrequency="100" IsSnapToTickEnabled="True" Name="slResults" Value="5"/>
+                            </DockPanel>
+                            <TextBlock TextWrapping="WrapWithOverflow" Margin="0,10,0,0">Meeting radius (more options when increased)</TextBlock>
+                            <DockPanel VerticalAlignment="Center" Margin="10">
+                                <TextBox Text="{Binding ElementName=slRadius, Path=Value, UpdateSourceTrigger=PropertyChanged}" DockPanel.Dock="Right" TextAlignment="Right" Width="40" />
+                                <Slider Maximum="3000" Minimum="500" TickPlacement="BottomRight" TickFrequency="100" IsSnapToTickEnabled="True" Name="slRadius" Value="800"/>
+                            </DockPanel>
+                        </StackPanel>
+                        <Button x:Name="InfoButton" HorizontalAlignment="Left" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" BorderBrush="Transparent" MouseEnter="Highlight" Click="OpenAbout" MouseLeave="Unhighlight" Height="60" Margin="0,10,0,0">
+                            <StackPanel Orientation="Horizontal" Margin="40,0,0,0">
+                                <Image x:Name="InfoImg" Source="Assets/about.png" Width="40" Margin="0,0,20,0" HorizontalAlignment="Left"/>
+                                <TextBlock Background="Transparent" VerticalAlignment="Center" FontFamily="Helvetica" FontSize="15">Help</TextBlock>
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
                 </ScrollViewer>
-                <fa:ImageAwesome x:Name="MeetingLoadingIcon" Visibility="Collapsed" Icon="Spinner" Spin="True" SpinDuration="3" Height="30"/>
-                <StackPanel Orientation="Horizontal" x:Name="SaveMenu" Margin="40,20,0,0" HorizontalAlignment="Left">
-                    <Button Margin="0,0,10,0" Click="CancelMeeting">Cancel</Button>
-                    <Button x:Name="MeetingSaveButton" Tag="" Margin="10,0,0,0" Click="SaveMeeting">Suggest a meeting place</Button>
-                </StackPanel>
-
-                <Button x:Name="HistoryButton" HorizontalAlignment="Left" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" BorderBrush="Transparent" MouseEnter="Highlight" Click="OpenPastMeetings" MouseLeave="Unhighlight" Height="60" Margin="0,10,0,0">
-                    <StackPanel Orientation="Horizontal" Margin="40,0,0,0">
-                        <Image x:Name="HistoryImg" Source="Assets/history.png" Width="40" Margin="0,0,20,0" HorizontalAlignment="Left"/>
-                        <TextBlock Background="Transparent" VerticalAlignment="Center" FontFamily="Helvetica" FontSize="15">My meetings</TextBlock>
-                    </StackPanel>
-                </Button>
-                <Button x:Name="SettingsButton" HorizontalAlignment="Left" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" BorderBrush="Transparent" MouseEnter="Highlight" Click="OpenCloseSettings" MouseLeave="Unhighlight" Height="60" Margin="0,10,0,0">
-                    <StackPanel Orientation="Horizontal" Margin="40,0,0,0">
-                        <Image x:Name="SettingsImg" Source="Assets/settings.png" Width="40" Margin="0,0,20,0" HorizontalAlignment="Left"/>
-                        <TextBlock Background="Transparent" VerticalAlignment="Center" FontFamily="Helvetica" FontSize="15">Settings</TextBlock>
-                    </StackPanel>
-                </Button>
-                <StackPanel Orientation="Vertical" x:Name="SettingsMenu" Margin="40,10,0,0">
-                    <Button x:Name="ContactsButton" Margin="0,0,0,0" Click="ShowContactsBook">My contacts</Button>
-                    <TextBlock TextWrapping="WrapWithOverflow" Margin="0,10,0,0">Number of place suggestions</TextBlock>
-                    <DockPanel VerticalAlignment="Center" Margin="10">
-                        <TextBox Text="{Binding ElementName=slResults, Path=Value, UpdateSourceTrigger=PropertyChanged}" DockPanel.Dock="Right" TextAlignment="Right" Width="40" />
-                        <Slider Maximum="20" Minimum="3" TickPlacement="BottomRight" TickFrequency="100" IsSnapToTickEnabled="True" Name="slResults" Value="5"/>
-                    </DockPanel>
-                    <TextBlock TextWrapping="WrapWithOverflow" Margin="0,10,0,0">Meeting radius (more options when increased)</TextBlock>
-                    <DockPanel VerticalAlignment="Center" Margin="10">
-                        <TextBox Text="{Binding ElementName=slRadius, Path=Value, UpdateSourceTrigger=PropertyChanged}" DockPanel.Dock="Right" TextAlignment="Right" Width="40" />
-                        <Slider Maximum="3000" Minimum="500" TickPlacement="BottomRight" TickFrequency="100" IsSnapToTickEnabled="True" Name="slRadius" Value="800"/>
-                    </DockPanel>
-                </StackPanel>
-                <Button x:Name="InfoButton" HorizontalAlignment="Left" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" BorderBrush="Transparent" MouseEnter="Highlight" Click="OpenAbout" MouseLeave="Unhighlight" Height="60" Margin="0,10,0,0">
-                    <StackPanel Orientation="Horizontal" Margin="40,0,0,0">
-                        <Image x:Name="InfoImg" Source="Assets/about.png" Width="40" Margin="0,0,20,0" HorizontalAlignment="Left"/>
-                        <TextBlock Background="Transparent" VerticalAlignment="Center" FontFamily="Helvetica" FontSize="15">Help</TextBlock>
-                    </StackPanel>
-                </Button>
-            </StackPanel>
+            </DockPanel>
         </Grid>
     </Border>
 

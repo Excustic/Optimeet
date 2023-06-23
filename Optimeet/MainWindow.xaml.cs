@@ -1,4 +1,5 @@
 ﻿using FontAwesome.WPF;
+using Google.Apis.Calendar.v3.Data;
 using Microsoft.Maps.MapControl.WPF;
 using System;
 using System.Collections.Generic;
@@ -9,6 +10,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using static Optimeet.Meeting;
 using Brushes = System.Windows.Media.Brushes;
@@ -26,7 +28,8 @@ namespace Optimeet
         FileManager fm;
         private Location CreateContactLocation;
 
-        public int FinalChoice { get; private set; }
+
+        public Location FinalChoice { get; private set; }
 
         public MainWindow()
         {
@@ -37,39 +40,17 @@ namespace Optimeet
             ApplicationMap.Children.Add(mapLayer);
             ResetViews();
             LoadContactsUI();
-            //Contact p1 = new Contact("Ben");
-            //p1.SetLocation(32.0267904f, 34.7579567f);
-            //Contact p2 = new Contact("Michael");
-            //p2.SetLocation(32.0496376f, 34.8059143f);
-            //Contact p3 = new Contact("Leon");
-            //p3.SetLocation(31.9770394f, 34.7695861f);
-            //Contact p4 = new Contact("Evgeniy");
-            //p4.SetLocation(32.432225f, 34.920580f);
-            //Contact p5 = new Contact("Masha");
-            //p5.SetLocation(34.421225f, 36.921580f);
-            //Contact p6 = new Contact("Leonid");
-            //p6.SetLocation(32.233225f, 31.922580f);
-            //Contact p7 = new Contact("Michael Stern");
-            //p7.SetLocation(33.472115f, 35.220580f);
-            //fm.Contacts.Add(p1.Name, p1);
-            //fm.Contacts.Add(p2.Name, p2);
-            //fm.Contacts.Add(p3.Name, p3);
-            //fm.Contacts.Add(p4.Name, p4);
-            //fm.Contacts.Add(p5.Name, p5);
-            //fm.Contacts.Add(p6.Name, p6);
-            //fm.Contacts.Add(p7.Name, p7);
-            //fm.SaveContacts();
-            //Meeting m = new Meeting("Ben's birthday", d, p);
-            //m.SuggestLocations("Restaurant");
+            LoadMeetingsUI();
         }
+
 
         private void ResetViews()
         {
             //Initiate the default screen
             CreateButton.Visibility = Visibility.Visible;
             CreateButton.IsEnabled = true;
-            HistoryButton.Visibility = Visibility.Visible;
-            HistoryButton.IsEnabled = true;
+            MeetingsButton.Visibility = Visibility.Visible;
+            MeetingsButton.IsEnabled = true;
             InfoButton.Visibility = Visibility.Visible;
             InfoButton.IsEnabled = true;
             SettingsButton.Visibility = Visibility.Visible;
@@ -77,6 +58,7 @@ namespace Optimeet
             //Hide openable menus
             CreateMenu.Visibility = Visibility.Collapsed;
             SaveMenu.Visibility = Visibility.Collapsed;
+            MeetingsMenu.Visibility = Visibility.Collapsed;
             SuggestionsScroll.Visibility = Visibility.Collapsed;
             ContactWindow.Visibility = Visibility.Collapsed;
             SettingsMenu.Visibility = Visibility.Collapsed;
@@ -155,7 +137,7 @@ namespace Optimeet
         private void CreateMeeting(object sender, RoutedEventArgs e)
         {
             ResetViews();
-            HistoryButton.Visibility = Visibility.Collapsed;
+            MeetingsButton.Visibility = Visibility.Collapsed;
             SettingsButton.Visibility = Visibility.Collapsed;
             InfoButton.Visibility = Visibility.Collapsed;
             CreateMenu.Visibility = Visibility.Visible;
@@ -248,9 +230,18 @@ namespace Optimeet
 
         }
 
-        private void OpenPastMeetings(object sender, RoutedEventArgs e)
+        private void OpenMeetings(object sender, RoutedEventArgs e)
         {
-
+            switch (MeetingsMenu.Visibility)
+            {
+                case Visibility.Visible:
+                    MeetingsMenu.Visibility = Visibility.Collapsed;
+                    break;
+                case Visibility.Collapsed:
+                    MeetingsMenu.Visibility = Visibility.Visible;
+                    break;
+            }
+                
         }
 
         private void OpenCloseSettings(object sender, RoutedEventArgs e)
@@ -290,16 +281,27 @@ namespace Optimeet
                 m = new Meeting(subject, date, participants);
                 if (!((Button)sender).Tag.Equals(""))
                 {
+                    m.SubmitLocation(FinalChoice);
                     fm.Meetings.Add(m);
                     fm.SaveMeetings();
                     MeetingSaveButton.Tag = "";
+                    ApplicationMap.Children.Clear();
                     ResetViews();
+                    //Apply the addition
+                    FutureList.Children.Clear();
+                    UpcomingList.Children.Clear();
+                    PastList.Children.Clear();
+                    LoadMeetingsUI();
+                    OpenMeetings(sender, e);
                     MessageBox.Show("Meeting was saved successfully.");
                 }
-                CreateMenu.Visibility = Visibility.Collapsed;
-                MeetingLoadingIcon.Visibility = Visibility.Visible;
-                ShowSuggestions(m);
-                MeetingSaveButton.Tag = FinalChoice;
+                else
+                {
+                    CreateMenu.Visibility = Visibility.Collapsed;
+                    MeetingLoadingIcon.Visibility = Visibility.Visible;
+                    ShowSuggestions(m);
+                    MeetingSaveButton.Tag = "";
+                }
             }
             else
             {
@@ -360,9 +362,12 @@ namespace Optimeet
             };
             p.Location = new Microsoft.Maps.MapControl.WPF.Location(results[i].Latitude, results[i].Longitude);
             ApplicationMap.Children.Add(p);
+            //Make a field in scope so it can be used later in click without worrying about 'i' changing
+            Location currentLoc = results[i];
             b.Click += (object sender, RoutedEventArgs args) => {
                 Highlight(b);
-                FinalChoice = i;
+                FinalChoice = currentLoc;
+                MeetingSaveButton.Tag = currentLoc.Address;
                 ApplicationMap.SetView(p.Location, 17.6f);
                 foreach (Button btn in SuggestionsList.Children)
                 {
@@ -375,6 +380,7 @@ namespace Optimeet
 
             }
             MeetingSaveButton.Content = "Save";
+            MeetingSaveButton.Tag = "";
         MeetingLoadingIcon.Visibility = Visibility.Collapsed;
         SuggestionsScroll.Visibility = Visibility.Visible;
         }
@@ -388,6 +394,240 @@ namespace Optimeet
             if (people.Count < 2)
                 return "Please add at least 2 participants";
             return null;
+        }
+        private void LoadMeetingsUI()
+        {
+            SortedSet<Meeting> MeetingSet = fm.Meetings;
+            Queue<Meeting> UpcomingMeetings = new Queue<Meeting>(),
+                FutureMeetings = new Queue<Meeting>(),
+                PastMeetings = new Queue<Meeting>();
+            Meeting LimitMeeting = new Meeting("limit upcoming", DateTime.Now.AddDays(14), null);
+            SortedSet<Meeting>.Enumerator AllMeetings = MeetingSet.GetEnumerator();
+            AllMeetings.MoveNext(); //First current is null
+            for (int i = 0; i < MeetingSet.Count; i++)
+            {
+                switch(AllMeetings.Current.CompareTo(LimitMeeting))
+                {
+                    case -1:
+                        LimitMeeting.SetMeetingDate(DateTime.Now);
+                        if (AllMeetings.Current.CompareTo(LimitMeeting) == -1)
+                            PastMeetings.Enqueue(AllMeetings.Current);
+                        else UpcomingMeetings.Enqueue(AllMeetings.Current);
+                        break;
+                    case 0:
+                        LimitMeeting.SetMeetingDate(DateTime.Now);
+                        if (AllMeetings.Current.CompareTo(LimitMeeting) == -1)
+                            PastMeetings.Enqueue(AllMeetings.Current);
+                        else UpcomingMeetings.Enqueue(AllMeetings.Current);
+                        break;
+                    case 1:
+                        FutureMeetings.Enqueue(AllMeetings.Current);
+                        break;
+                }
+                LimitMeeting.SetMeetingDate(DateTime.Now.AddDays(14));
+                AllMeetings.MoveNext(); 
+            }
+            //Update counters
+            FutureCount.Text = FutureMeetings.Count.ToString();
+            UpcomingCount.Text = UpcomingMeetings.Count.ToString();
+            PastCount.Text = PastMeetings.Count.ToString();
+            //Add lists to UI
+            CreateMeetingChildren(FutureMeetings, FutureList);
+            CreateMeetingChildren(UpcomingMeetings, UpcomingList);
+            CreateMeetingChildren(PastMeetings, PastList);
+        }
+
+        private void CreateMeetingChildren(Queue<Meeting> queue, StackPanel target)
+        {
+            int meetings = queue.Count + 1;
+            while (queue.Count > 0)
+            {
+                Meeting m = queue.Dequeue();
+                // Make an attendees list seperated by commas
+                List<Contact> people = m.GetPeople();
+                string attendees ="";
+                foreach (Contact c in people)
+                    attendees += c.Name + ", ";
+                attendees = attendees.Substring(0, attendees.Length - 2);
+                //Build the box view
+                //Prepare text blocks
+                TextBlock tbMeetingName = new TextBlock()
+                {
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(0, 0, 0, 0),
+                    FontSize = 18,
+                    Text = m.Title
+                };
+                TextBlock tbMeetingAttendees = new TextBlock()
+                {
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(5, 0, 0, 0),
+                    Foreground = Brushes.Gray,
+                    FontSize = 12,
+                    Text = attendees
+                };
+                TextBlock tbMeetingDate = new TextBlock()
+                {
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(5, 0, 0, 0),
+                    Foreground = Brushes.Gray,
+                    FontSize = 12,
+                    Text = m.GetMeetingDate().ToString("f")
+                };
+                TextBlock tbMeetingAddress = new TextBlock()
+                {
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(5, 0, 0, 0),
+                    Foreground = Brushes.Gray,
+                    FontSize = 12,
+                    Text = m.GetLocation().Address
+                };
+                // icons
+                Image iPin = new Image()
+                {
+                    Source = new BitmapImage(new Uri(@"/Assets/pin.png", UriKind.Relative)),
+                    Height = 40,
+                    Width = 40,
+                    Margin = new Thickness(0, 0, 10, 0),
+                    HorizontalAlignment = HorizontalAlignment.Left
+                };
+                iPin.MouseDown += (object sender, MouseButtonEventArgs e) =>
+                {
+                    Location l = m.GetLocation();
+                    ApplicationMap.SetView(new Microsoft.Maps.MapControl.WPF.Location(l.Latitude, l.Longitude), 18f);
+                };
+                Image iClock = new Image()
+                {
+                    Source = new BitmapImage(new Uri(@"/Assets/clock.jpg", UriKind.Relative)),
+                    Height = 20,
+                    Width = 20,
+                    HorizontalAlignment = HorizontalAlignment.Left
+                };
+                Image iPeople = new Image()
+                {
+                    Source = new BitmapImage(new Uri(@"/Assets/people.png", UriKind.Relative)),
+                    Height = 20,
+                    Width = 20,
+                    HorizontalAlignment = HorizontalAlignment.Left
+                };
+                Image iAddress = new Image()
+                {
+                    Source = new BitmapImage(new Uri(@"/Assets/address.png", UriKind.Relative)),
+                    Height = 20,
+                    Width = 20,
+                    HorizontalAlignment = HorizontalAlignment.Left
+                };
+                Image iDelete = new Image()
+                {
+                    Source = new BitmapImage(new Uri(@"/Assets/delete.png", UriKind.Relative)),
+                    Height = 25,
+                    Width = 25,
+                    Margin = new Thickness(10,0,0,0),
+                    HorizontalAlignment = HorizontalAlignment.Right
+                };
+                iDelete.MouseDown += (object sender, MouseButtonEventArgs e) =>
+                {
+                    if (MessageBox.Show("Delete Meeting", "Do you want to perform this action?", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                    {
+                        fm.Meetings.Remove(m);
+                        ResetViews();
+                        //Apply the addition
+                        FutureList.Children.Clear();
+                        UpcomingList.Children.Clear();
+                        PastList.Children.Clear();
+                        fm.SaveMeetings();
+                        LoadMeetingsUI();
+                        OpenMeetings(sender, e);
+                    }
+                };
+                Image iMail = new Image()
+                {
+                    Source = new BitmapImage(new Uri(@"/Assets/mail.jpg", UriKind.Relative)),
+                    Height = 25,
+                    Width = 25,
+                    Margin = new Thickness(10, 0, 0, 0),
+                    HorizontalAlignment = HorizontalAlignment.Right
+                };
+                iMail.MouseDown += (object sender, MouseButtonEventArgs e) =>
+                {
+                    if (MessageBox.Show("Send mail invitation to attendees", "Do you want to perform this action?", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                    {
+                        
+                    }
+                };
+                //Encapsulate data in stackpanels
+                StackPanel spTitle = new StackPanel()
+                {
+                    Orientation = Orientation.Horizontal,
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Center,
+                };
+                spTitle.Children.Add(tbMeetingName);
+                spTitle.Children.Add(iMail);
+                spTitle.Children.Add(iDelete);
+                StackPanel spAttendees = new StackPanel()
+                {
+                    Orientation = Orientation.Horizontal,
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(0, 5, 0, 0)
+                };
+                spAttendees.Children.Add(iPeople);
+                spAttendees.Children.Add(tbMeetingAttendees);
+                StackPanel spDate = new StackPanel()
+                {
+                    Orientation = Orientation.Horizontal,
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(0, 5, 0, 0)
+                };
+                spDate.Children.Add(iClock);
+                spDate.Children.Add(tbMeetingDate);
+
+                StackPanel spAddress = new StackPanel()
+                {
+                    Orientation = Orientation.Horizontal,
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(0, 5, 0, 0)
+                };
+                spAddress.Children.Add(iAddress);
+                spAddress.Children.Add(tbMeetingAddress);
+
+                StackPanel spTexts = new StackPanel()
+                {
+                    Orientation = Orientation.Vertical,
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(10, 0, 0, 0)
+                };
+                spTexts.Children.Add(spTitle);
+                spTexts.Children.Add(spAttendees);
+                spTexts.Children.Add(spDate);
+                spTexts.Children.Add(spAddress);
+
+                StackPanel spParent = new StackPanel()
+                {
+                    Orientation = Orientation.Horizontal,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+                spParent.Children.Add(iPin);
+                spParent.Children.Add(spTexts);
+
+                //Encapsulate in button and add to list
+                Button b = new Button
+                {
+                    Content = spParent,
+                    Name = "bt_" + (meetings - queue.Count),
+                    Template = (ControlTemplate)FindResource("NoMouseOverButtonTemplate"),
+                    Background = Brushes.Transparent,
+                    BorderBrush = Brushes.Transparent,
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    Margin = new Thickness(0, 20, 0, 0)
+                };
+                target.Children.Add(b);
+            }
         }
 
         private void LoadContactsUI()
@@ -525,7 +765,7 @@ namespace Optimeet
         {
             CloseContactBook(sender, e);
             ResetViews();
-            HistoryButton.Visibility = Visibility.Collapsed;
+            MeetingsButton.Visibility = Visibility.Collapsed;
             SettingsButton.Visibility = Visibility.Collapsed;
             InfoButton.Visibility = Visibility.Collapsed;
             CreateMenu.Visibility = Visibility.Collapsed;
@@ -628,6 +868,66 @@ namespace Optimeet
                 ApplicationMap.SetView(p.Location, 17f);
                 ApplicationMap.Children.Add(p);            
             }
+        }
+
+        private void ShowFutureM(object sender, MouseEventArgs e)
+        {
+            RotateArrow((Image)e.Source);
+            if (FutureArrow.Tag.Equals("Expanded"))
+                FutureList.Visibility = Visibility.Visible;
+            else if (FutureArrow.Tag.Equals("Collapsed"))
+                FutureList.Visibility = Visibility.Collapsed;            
+        }
+
+        private void ShowUpcomingM(object sender, MouseEventArgs e)
+        {
+            RotateArrow((Image)e.Source);
+            if (UpcomingArrow.Tag.Equals("Expanded"))
+                UpcomingList.Visibility = Visibility.Visible;
+            else if (UpcomingArrow.Tag.Equals("Collapsed"))
+                UpcomingList.Visibility = Visibility.Collapsed;
+        }
+
+        private void ShowPastM(object sender, MouseEventArgs e)
+        {
+            RotateArrow((Image)e.Source);
+            if (PastArrow.Tag.Equals("Expanded"))
+                PastList.Visibility = Visibility.Visible;
+            else if (PastArrow.Tag.Equals("Collapsed"))
+                PastList.Visibility = Visibility.Collapsed;
+        }
+        private void RotateArrow(Image i)
+        {
+            RotateTransform trans = new RotateTransform(0, 0.5, 0.5);
+            i.RenderTransform = trans;
+            EasingDoubleKeyFrame frame1 = new EasingDoubleKeyFrame(0, KeyTime.FromTimeSpan(new TimeSpan(0, 0, 0, 0, 0)), new CircleEase());
+            EasingDoubleKeyFrame frame2 = new EasingDoubleKeyFrame(0, KeyTime.FromTimeSpan(new TimeSpan(0, 0, 0, 0, 450)), new CircleEase());
+            DoubleKeyFrameCollection frames = new DoubleKeyFrameCollection();
+            switch (i.Tag)
+            {
+                case "Collapsed":
+                    frame1 = new EasingDoubleKeyFrame(0, KeyTime.FromTimeSpan(new TimeSpan(0, 0, 0, 0, 0)), new CircleEase());
+                    frame2 = new EasingDoubleKeyFrame(90, KeyTime.FromTimeSpan(new TimeSpan(0, 0, 0, 0, 450)), new CircleEase());
+                    i.Tag = "Expanded";
+                    break;
+                case "Expanded":
+                    frame1 = new EasingDoubleKeyFrame(90, KeyTime.FromTimeSpan(new TimeSpan(0, 0, 0, 0, 0)), new CircleEase());
+                    frame2 = new EasingDoubleKeyFrame(0, KeyTime.FromTimeSpan(new TimeSpan(0, 0, 0, 0, 450)), new CircleEase());
+                    i.Tag = "Collapsed";
+                    break;
+            }
+            frames.Add(frame1);
+            frames.Add(frame2);
+            DoubleAnimationUsingKeyFrames rotateAnim = new DoubleAnimationUsingKeyFrames()
+            {
+                KeyFrames = frames
+            };
+            trans.BeginAnimation(RotateTransform.AngleProperty, rotateAnim);
+        }
+
+        public void createGoogleCalendarEvent()
+        {
+            
         }
     }
 }

@@ -45,6 +45,10 @@ namespace Optimeet
                 People.Add(p);
             else throw new Exception("null exception");
         }
+        public Location GetLocation()
+        {
+            return MeetingLocation;
+        }
         public void SubmitLocation(Location FinalLoc)
         {
             MeetingLocation = FinalLoc;
@@ -108,7 +112,6 @@ namespace Optimeet
             names = names.Substring(0, names.Length - 2);
             return Title + " meeting, on the " + MeetingDate.ToString() + ", at " + MeetingLocation.Address + ". Attending: " + names;
         }
-
         public int CompareTo(Meeting m)
         {
             return DateTime.Compare(MeetingDate, m.MeetingDate);
