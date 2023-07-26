@@ -15,13 +15,19 @@ namespace Optimeet
         Environment.SpecialFolder.MyDoc‌​uments), "Optimeet", "contacts.xml");
         readonly string path_meetings = Path.Combine(Environment.GetFolderPath(
         Environment.SpecialFolder.MyDoc‌​uments), "Optimeet", "meetings.xml");
+        readonly string path_settings = Path.Combine(Environment.GetFolderPath(
+        Environment.SpecialFolder.MyDoc‌​uments), "Optimeet", "settings.csv");
         public Trie<Contact> Contacts;
         public SortedSet<Meeting> Meetings;
+        public Dictionary<string, int[]> Settings;
         private static FileManager _instance;
+        public const string SETTING_1 = "Number of place suggestions";
+        public const string SETTING_2 = "Search radius (m)";
         private FileManager() 
         {
             LoadContacts();
             LoadMeetings();
+            LoadSettings();
         }
 
         public static FileManager GetInstance()
@@ -33,6 +39,60 @@ namespace Optimeet
             return _instance;
         }
 
+
+        private void LoadSettings()
+        {
+            Settings = new Dictionary<string, int[]>();
+            try
+            {
+                using(var reader = new StreamReader(path_settings))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var values = line.Split(',');
+                        int[] arr = new int[] {
+                        int.Parse(values[1]),
+                        int.Parse(values[2]),
+                        int.Parse(values[3])};
+                        Settings.Add(values[0], arr);
+                    }
+                }
+            }
+            catch(FileNotFoundException)
+            {
+                Settings.Add(SETTING_1, new int[] { 3, 5, 15 });
+                Settings.Add(SETTING_2, new int[] { 50, 800, 5000 });
+                SaveSettings();
+            }
+        }
+
+        public void SaveSettings()
+        {
+            if (!Directory.Exists(path_meetings))
+            {
+                string[] splits = path_meetings.Split('\\');
+                string rootpath = path_meetings.Substring(0, path_meetings.Length - splits[splits.Length - 1].Length);
+                Directory.CreateDirectory(rootpath);
+            }
+            string csv = string.Join(Environment.NewLine, Settings.Select(d => $"{d.Key},{d.Value[0]},{d.Value[1]},{d.Value[2]}"));
+            File.WriteAllText(path_settings, csv);
+        }
+
+    private void LoadContacts()
+        {
+            if (File.Exists(path_contacts))
+            {
+                var fileStream = new FileStream(path_contacts, FileMode.Open);
+                var reader = XmlDictionaryReader.CreateTextReader(fileStream, new XmlDictionaryReaderQuotas() { MaxDepth = 200});
+                var serializer = new DataContractSerializer(typeof(Trie<Contact>));
+                Trie<Contact> serializableObject = (Trie<Contact>)serializer.ReadObject(reader, true);
+                reader.Close();
+                fileStream.Close();
+                Contacts = serializableObject;
+            }
+            else Contacts = new Trie<Contact>();
+        }
         public void SaveContacts()
         {
             var serializer = new DataContractSerializer(typeof(Trie<Contact>));
@@ -51,21 +111,6 @@ namespace Optimeet
             var writer = XmlWriter.Create(path_contacts, settings);
             serializer.WriteObject(writer, Contacts);
             writer.Close();
-        }
-
-        private void LoadContacts()
-        {
-            if (File.Exists(path_contacts))
-            {
-                var fileStream = new FileStream(path_contacts, FileMode.Open);
-                var reader = XmlDictionaryReader.CreateTextReader(fileStream, new XmlDictionaryReaderQuotas() { MaxDepth = 200});
-                var serializer = new DataContractSerializer(typeof(Trie<Contact>));
-                Trie<Contact> serializableObject = (Trie<Contact>)serializer.ReadObject(reader, true);
-                reader.Close();
-                fileStream.Close();
-                Contacts = serializableObject;
-            }
-            else Contacts = new Trie<Contact>();
         }
         private void LoadMeetings()
         {

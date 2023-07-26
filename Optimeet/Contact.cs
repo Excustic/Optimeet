@@ -74,7 +74,7 @@ namespace Optimeet
         public Contact(string name, string email = null)
         {
             Name = name;
-            if(email != null || email.Length == 0)
+            if(email != null && email.Length != 0)
                 try
                 {
                     _ = new MailAddress(email);

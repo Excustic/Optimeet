@@ -83,23 +83,19 @@ namespace Optimeet
             }
             return null;
         }
-        public async Task<Location[]> TopNLocations(Location l, int NumOfResults, string filter = "")
+        public async Task<Location[]> TopNLocations(Location l, int NumOfResults, double radius, string filter = "")
         {
-            double radius = 1000;
             string url = string.Format(baseUrlPR, filter, l.Latitude, l.Longitude, radius);
             string Response = await GetAsync(url);
             JObject res = JsonConvert.DeserializeObject<JObject>(Response);
             Location[] Reccomendations = GetPlaces(res);
-            if (Reccomendations.Length < NumOfResults)
+            while (Reccomendations.Length < NumOfResults && (Reccomendations.Length == 0 || radius < 20000))
             {
-                while (Reccomendations.Length == 0 && radius < 20000)
-                {
-                    radius *= 1.5;
-                    url = string.Format(baseUrlPR, filter, l.Latitude, l.Longitude, radius);
-                    Response = await GetAsync(url);
-                    res = JsonConvert.DeserializeObject<JObject>(Response);
-                    Reccomendations = GetPlaces(res);
-                }
+                radius *= 1.5;
+                url = string.Format(baseUrlPR, filter, l.Latitude, l.Longitude, radius);
+                Response = await GetAsync(url);
+                res = JsonConvert.DeserializeObject<JObject>(Response);
+                Reccomendations = GetPlaces(res);
             }
             if (Reccomendations.Length > NumOfResults)
                 Reccomendations = SortPlacesByDistance(Reccomendations, l, NumOfResults);

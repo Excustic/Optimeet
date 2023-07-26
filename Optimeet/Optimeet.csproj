@@ -209,5 +209,8 @@
   <ItemGroup>
     <Resource Include="Assets\mail.jpg" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\google.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

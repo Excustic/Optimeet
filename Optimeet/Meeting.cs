@@ -18,8 +18,6 @@ namespace Optimeet
         private List<Contact> People;
         [DataMember]
         private Location MeetingLocation;
-        [DataMember]
-        public static int user_settings_resultsCount = 3;
 
         public Meeting(string t, DateTime d, List<Contact> p)
         {
@@ -57,7 +55,10 @@ namespace Optimeet
         public async Task<Location[]> SuggestLocations(string filter = "")
         {
             Location Centroid = LocationsCentroidWeighted();
-            Location[] suggestions = await MapsHelper.GetInstance().TopNLocations(Centroid, user_settings_resultsCount, filter);
+            Location[] suggestions = await MapsHelper.GetInstance().TopNLocations(Centroid,
+                FileManager.GetInstance().Settings[FileManager.SETTING_1][1],
+                FileManager.GetInstance().Settings[FileManager.SETTING_2][1],
+                filter);
             return suggestions;
         }
 

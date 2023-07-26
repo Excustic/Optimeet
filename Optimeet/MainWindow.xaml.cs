@@ -41,8 +41,60 @@ namespace Optimeet
             ResetViews();
             LoadContactsUI();
             LoadMeetingsUI();
+            LoadSettingsUI();
         }
 
+        private void LoadSettingsUI()
+        {
+            int count = 0;
+            foreach(KeyValuePair<string, int[]> setting in fm.Settings)
+            {
+                TextBlock t = new TextBlock()
+                {
+                    Text = setting.Key,
+                    Margin = new Thickness(0, 10, 0, 0),
+                    TextWrapping = TextWrapping.WrapWithOverflow,
+                    Name = "block_"+count
+                };
+                DockPanel d = new DockPanel()
+                {
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(10)
+                };
+                TextBox val = new TextBox()
+                {
+                    Text = setting.Value[1].ToString(),
+                    Width = 40,
+                    TextAlignment = TextAlignment.Center,
+                    Name = "val_"+count
+                };
+                Slider sl = new Slider()
+                {
+                    Minimum = setting.Value[0],
+                    Maximum = setting.Value[2],
+                    Value = setting.Value[1],
+                    TickFrequency = Math.Round((setting.Value[2] - setting.Value[0]) / 10.0, 0),
+                    TickPlacement = System.Windows.Controls.Primitives.TickPlacement.BottomRight,
+                    IsSnapToTickEnabled = true,
+                    Name = "slResults_"+count,
+                    Tag = setting.Key
+                };
+                sl.ValueChanged += (object sender, RoutedPropertyChangedEventArgs<double> arg) => {
+                    int[] arr = fm.Settings[sl.Tag.ToString()];
+                    arr[1] = (int)sl.Value;
+                    fm.Settings[sl.Tag.ToString()] = arr;
+                    val.Text = arr[1].ToString();
+                    fm.SaveSettings();
+                };
+
+                DockPanel.SetDock(val, Dock.Right);
+                d.Children.Add(val);
+                d.Children.Add(sl);
+                SettingsMenu.Children.Add(t);
+                SettingsMenu.Children.Add(d);
+                count++;
+            }
+    }
 
         private void ResetViews()
         {
@@ -55,6 +107,8 @@ namespace Optimeet
             InfoButton.IsEnabled = true;
             SettingsButton.Visibility = Visibility.Visible;
             SettingsButton.IsEnabled = true;
+            ContactsButton.Visibility = Visibility.Visible;
+            ContactsButton.IsEnabled = true;
             //Hide openable menus
             CreateMenu.Visibility = Visibility.Collapsed;
             SaveMenu.Visibility = Visibility.Collapsed;
@@ -64,7 +118,6 @@ namespace Optimeet
             SettingsMenu.Visibility = Visibility.Collapsed;
             ContactCreateMenu.Visibility = Visibility.Collapsed;
             //Hide floating elements
-            ContactBookBackButton.Visibility = Visibility.Collapsed;
             AddContactButton.Visibility = Visibility.Collapsed;
             //Clear elements
             mapLayer.Children.Clear();
@@ -139,6 +192,7 @@ namespace Optimeet
             ResetViews();
             MeetingsButton.Visibility = Visibility.Collapsed;
             SettingsButton.Visibility = Visibility.Collapsed;
+            ContactsButton.Visibility = Visibility.Collapsed;
             InfoButton.Visibility = Visibility.Collapsed;
             CreateMenu.Visibility = Visibility.Visible;
             SaveMenu.Visibility = Visibility.Visible;
@@ -185,15 +239,21 @@ namespace Optimeet
             return t;
         }
 
-        private void AddContactList()
+        private void AddContactList(string filter = "")
         {
-            foreach (Contact person in fm.Contacts.GetChildren())
+            Queue<Contact> contacts = null;
+            if (filter.Equals(""))
+                contacts = fm.Contacts.GetChildren();
+            else
+                contacts = fm.Contacts.GetChildren(filter);
+            foreach (Contact person in contacts)
             {
                 CheckBox box = new CheckBox();
                 box.Content = person;
                 ContactList.Children.Add(box);
             }
         }
+
 
         private void Highlight(object sender, MouseEventArgs e)
         {
@@ -434,10 +494,10 @@ namespace Optimeet
             //Add lists to UI
             CreateMeetingChildren(FutureMeetings, FutureList);
             CreateMeetingChildren(UpcomingMeetings, UpcomingList);
-            CreateMeetingChildren(PastMeetings, PastList);
+            CreateMeetingChildren(PastMeetings, PastList, true);
         }
 
-        private void CreateMeetingChildren(Queue<Meeting> queue, StackPanel target)
+        private void CreateMeetingChildren(Queue<Meeting> queue, StackPanel target, bool past = false)
         {
             int meetings = queue.Count + 1;
             while (queue.Count > 0)
@@ -458,13 +518,16 @@ namespace Optimeet
                     FontSize = 18,
                     Text = m.Title
                 };
-                TextBlock tbMeetingAttendees = new TextBlock()
+                TextBox tbMeetingAttendees = new TextBox()
                 {
                     VerticalAlignment = VerticalAlignment.Center,
                     Margin = new Thickness(5, 0, 0, 0),
                     Foreground = Brushes.Gray,
                     FontSize = 12,
-                    Text = attendees
+                    HorizontalScrollBarVisibility=ScrollBarVisibility.Auto,
+                    TextWrapping = TextWrapping.NoWrap,
+                    Width = 200,
+                    Text = attendees,
                 };
                 TextBlock tbMeetingDate = new TextBlock()
                 {
@@ -563,7 +626,8 @@ namespace Optimeet
                     VerticalAlignment = VerticalAlignment.Center,
                 };
                 spTitle.Children.Add(tbMeetingName);
-                spTitle.Children.Add(iMail);
+                if(!past) //Hiding mail button for past meetings
+                    spTitle.Children.Add(iMail);
                 spTitle.Children.Add(iDelete);
                 StackPanel spAttendees = new StackPanel()
                 {
@@ -746,30 +810,27 @@ namespace Optimeet
             }
         }
 
-        private void ShowContactsBook(object sender, RoutedEventArgs e)
+        private void OpenCloseContactsBook(object sender, RoutedEventArgs e)
         {
-            ContactWindow.Visibility = Visibility.Visible;
-            ContactBookBackButton.Visibility = Visibility.Visible;
-            AddContactButton.Visibility = Visibility.Visible;
-        }
+            Visibility vis;
+            if (ContactWindow.Visibility.Equals(Visibility.Visible))
+                vis = Visibility.Collapsed;
+            else vis = Visibility.Visible;
+            ContactWindow.Visibility = vis;
+            AddContactButton.Visibility = vis;
 
-        private void CloseContactBook(object sender, RoutedEventArgs e)
-        {
-
-            ContactWindow.Visibility = Visibility.Collapsed;
-            ContactBookBackButton.Visibility = Visibility.Collapsed;
-            AddContactButton.Visibility = Visibility.Collapsed;
         }
 
         private void CreateContact(object sender, RoutedEventArgs e)
         {
-            CloseContactBook(sender, e);
+            OpenCloseContactsBook(sender, e);
             ResetViews();
             MeetingsButton.Visibility = Visibility.Collapsed;
             SettingsButton.Visibility = Visibility.Collapsed;
             InfoButton.Visibility = Visibility.Collapsed;
             CreateMenu.Visibility = Visibility.Collapsed;
             SaveMenu.Visibility = Visibility.Collapsed;
+            ContactsButton.Visibility = Visibility.Collapsed;
             CreateButton.Visibility = Visibility.Collapsed;
 
             //if edit was pressed
@@ -824,7 +885,7 @@ namespace Optimeet
                 //Apply the addition and reopen contact menu
                 ContactBook.Children.Clear();
                 LoadContactsUI();
-                ShowContactsBook(sender, e);
+                OpenCloseContactsBook(sender, e);
             }
             catch (Exception error)
             {
@@ -928,6 +989,35 @@ namespace Optimeet
         public void createGoogleCalendarEvent()
         {
             
+        }
+
+        private void ContactLookup(object sender, RoutedEventArgs e)
+        {
+            switch (SearchButton.Tag)
+            {
+                case "Search":
+                    SearchButton.Tag = "Reset";
+                    SearchButtonImage.Source = new BitmapImage(new Uri(@"/Assets/close.png", UriKind.Relative));
+                    Queue<Contact> results = fm.Contacts.GetChildren(SearchName.Text);
+                    for (int i = 0; i < ContactList.Children.Count; i++)
+                    {
+                        var box = (CheckBox)ContactList.Children[i];
+                        Contact c = (Contact)box.Content;
+                        if (results.Count == 0 || !c.Name.Equals(results.Peek().Name) )
+                            box.Visibility = Visibility.Collapsed;
+                        else
+                            results.Dequeue();
+                    }
+                    break;
+                case "Reset":
+                    SearchButton.Tag = "Search";
+                    SearchButtonImage.Source = new BitmapImage(new Uri(@"/Assets/search.png", UriKind.Relative));
+                    foreach (CheckBox box in ContactList.Children)
+                    {
+                        box.Visibility = Visibility.Visible;
+                    }
+                    break;
+            }
         }
     }
 }

@@ -134,10 +134,16 @@ namespace Optimeet
         public Queue<T> GetChildren()
         {
             Queue<T> children = new Queue<T>();
-            return GetChildren(children, _root, "");
+            return GetChildren(children, _root);
         }
 
-        private Queue<T> GetChildren(Queue<T> children, TrieNode<T> temp, string name)
+        public Queue<T> GetChildren(string name)
+        {
+            Queue<T> children = new Queue<T>();
+            return GetChildren(children, FindNode(FormatName(name), _root));
+        }
+
+        private Queue<T> GetChildren(Queue<T> children, TrieNode<T> temp)
         {
             int i = 0, j = temp.count;
             if (temp.Value != null)
@@ -147,7 +153,7 @@ namespace Optimeet
                 {
                     if (temp.children[i] != null)
                     {
-                        GetChildren(children, temp.children[i], name + itc(i));
+                        GetChildren(children, temp.children[i]);
                         j--;
                     }
                     i++;
