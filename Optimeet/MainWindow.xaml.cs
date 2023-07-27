@@ -1,10 +1,20 @@
 ﻿using FontAwesome.WPF;
+using Google.Apis.Auth.OAuth2;
+using Google.Apis.Auth.OAuth2.Flows;
+using Google.Apis.Auth.OAuth2.Responses;
+using Google.Apis.Calendar.v3;
 using Google.Apis.Calendar.v3.Data;
+using Google.Apis.Services;
+using Google.Apis.Util.Store;
 using Microsoft.Maps.MapControl.WPF;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using NodaTime;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -27,7 +37,10 @@ namespace Optimeet
         MapLayer mapLayer;
         FileManager fm;
         private Location CreateContactLocation;
-
+        static string[] Scopes = { CalendarService.Scope.CalendarEvents, CalendarService.Scope.Calendar };
+        private CalendarService service;
+        private UserCredential credential;
+        private readonly string credPath = "token.json";
 
         public Location FinalChoice { get; private set; }
 
@@ -42,6 +55,7 @@ namespace Optimeet
             LoadContactsUI();
             LoadMeetingsUI();
             LoadSettingsUI();
+            SignInGoogleAccount(null, new RoutedEventArgs());
         }
 
         private void LoadSettingsUI()
@@ -73,7 +87,7 @@ namespace Optimeet
                     Minimum = setting.Value[0],
                     Maximum = setting.Value[2],
                     Value = setting.Value[1],
-                    TickFrequency = Math.Round((setting.Value[2] - setting.Value[0]) / 10.0, 0),
+                    TickFrequency = setting.Value[3],
                     TickPlacement = System.Windows.Controls.Primitives.TickPlacement.BottomRight,
                     IsSnapToTickEnabled = true,
                     Name = "slResults_"+count,
@@ -119,6 +133,7 @@ namespace Optimeet
             ContactCreateMenu.Visibility = Visibility.Collapsed;
             //Hide floating elements
             AddContactButton.Visibility = Visibility.Collapsed;
+            SearchContactWrapper.Visibility = Visibility.Collapsed;
             //Clear elements
             mapLayer.Children.Clear();
             ContactList.Children.Clear();
@@ -216,6 +231,22 @@ namespace Optimeet
                          mapLayer.Children.Add(p);
                      }
                  };
+            if(service!=null)
+            {
+                StackPanel sp = new StackPanel() { Orientation = Orientation.Horizontal, Name = "googleInvite"};
+                TextBlock tb = new TextBlock() { Text = "Add to Google calendar?", VerticalAlignment = VerticalAlignment.Center };
+                ComboBox cb = new ComboBox() { Name = "calendar_options" };
+                ComboBoxItem cbi1 = new ComboBoxItem() { Content = "No" };
+                ComboBoxItem cbi2 = new ComboBoxItem() { Content = "Yes" };
+                ComboBoxItem cbi3 = new ComboBoxItem() { Content = "Yes, invite participants too" };
+                cb.Items.Add(cbi1);
+                cb.Items.Add(cbi2);
+                cb.Items.Add(cbi3);
+                cb.SelectedIndex = 0;
+                sp.Children.Add(tb);
+                sp.Children.Add(cb);
+                CreateMenu.Children.Add(sp);
+            }
         }
 
         private ControlTemplate CreateTemplatePushpin(CheckBox box)
@@ -318,6 +349,10 @@ namespace Optimeet
         {
             ResetViews();
             ApplicationMap.Children.Clear();
+            if(service != null)
+            {
+                CreateMenu.Children.RemoveAt(CreateMenu.Children.Count-1);
+            }
         }
 
         private void SaveMeeting(object sender, RoutedEventArgs e)
@@ -342,6 +377,17 @@ namespace Optimeet
                 if (!((Button)sender).Tag.Equals(""))
                 {
                     m.SubmitLocation(FinalChoice);
+                    if (service != null)
+                    {
+                        StackPanel sp = (StackPanel)CreateMenu.Children[CreateMenu.Children.Count - 1];
+                        ComboBox cb = (ComboBox)sp.Children[1];
+                        if(cb.SelectedIndex != 0)
+                        {
+                            //Add to google calendar and retrieve event id for future use
+                            m.googleId = CreateEvent(m, cb.SelectedIndex == 2);
+                        }
+                        CreateMenu.Children.RemoveAt(CreateMenu.Children.Count - 1);
+                    }
                     fm.Meetings.Add(m);
                     fm.SaveMeetings();
                     MeetingSaveButton.Tag = "";
@@ -601,6 +647,10 @@ namespace Optimeet
                         fm.SaveMeetings();
                         LoadMeetingsUI();
                         OpenMeetings(sender, e);
+                        if(service != null)
+                        {
+                            DeleteFromCalendar(m);
+                        }
                     }
                 };
                 Image iMail = new Image()
@@ -694,10 +744,23 @@ namespace Optimeet
             }
         }
 
-        private void LoadContactsUI()
+        private void DeleteFromCalendar(Meeting m)
+        {
+            try
+            {
+                service.Events.Delete("primary", m.googleId).Execute();
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+            
+        }
+
+        private void LoadContactsUI(string name = "")
         {
             Trie<Contact> trContacts = fm.Contacts;
-            Queue<Contact> qContacts = trContacts.GetChildren();
+            Queue<Contact> qContacts = trContacts.GetChildren(name);
             int contacts = qContacts.Count+1;
             while(qContacts.Count > 0)
             { 
@@ -816,9 +879,9 @@ namespace Optimeet
             if (ContactWindow.Visibility.Equals(Visibility.Visible))
                 vis = Visibility.Collapsed;
             else vis = Visibility.Visible;
-            ContactWindow.Visibility = vis;
-            AddContactButton.Visibility = vis;
-
+            ContactWindow.Visibility = 
+                SearchContactWrapper.Visibility = 
+                AddContactButton.Visibility = vis;
         }
 
         private void CreateContact(object sender, RoutedEventArgs e)
@@ -1018,6 +1081,147 @@ namespace Optimeet
                     }
                     break;
             }
+        }
+
+        private void SearchContact(object sender, RoutedEventArgs e)
+        {
+            switch (SearchContactButton.Tag)
+            {
+                case "Search":
+                    SearchContactButton.Tag = "Reset";
+                    SearchContactImage.Source = new BitmapImage(new Uri(@"/Assets/close.png", UriKind.Relative));
+                    if (!SearchContactName.Text.Equals(""))
+                    {
+                        ContactBook.Children.Clear();
+                        LoadContactsUI(SearchContactName.Text);
+                    }                  
+                    break;
+                case "Reset":
+                    SearchContactButton.Tag = "Search";
+                    SearchContactImage.Source = new BitmapImage(new Uri(@"/Assets/search.png", UriKind.Relative));
+                    ContactBook.Children.Clear();
+                    LoadContactsUI();
+                    break;
+            }
+        }
+
+        private async void SignInGoogleAccount(object sender, RoutedEventArgs e)
+        {
+            Button b = (Button)e.Source;
+            if (b != null && b.Tag.ToString().Equals("SignOut"))
+            {
+                try
+                {
+                    DirectoryInfo dir = new DirectoryInfo(Environment.CurrentDirectory);
+                    foreach (var subDir in dir.GetDirectories())
+                        if (subDir.Name.Equals(credPath))
+                        {
+                            subDir.Attributes = FileAttributes.Normal;
+                            subDir.Delete(true);
+                        }
+                }
+                catch(Exception ex)
+                {
+                    //Don't worry about it then
+                    return;
+                }
+                finally
+                {
+                    b.Tag = "SignIn";
+                    GoogleBlock.Text = "Sign in with Google";
+                }
+            }
+            else
+            {
+                try
+                {
+                    using (var stream = new FileStream("../../client_secrets.json", FileMode.Open, FileAccess.Read))
+                    {
+                        var flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
+                        {
+                            ClientSecrets = GoogleClientSecrets.FromStream(stream).Secrets,
+                            Scopes = Scopes,
+                            DataStore = new FileDataStore("Store")
+                        });
+                        string path = Directory.GetFiles(credPath)[0];
+                        using (var stream2 = new StreamReader(path))
+                        {
+                            string data = stream2.ReadToEnd();
+                            JObject jtoken = JsonConvert.DeserializeObject<JObject>(data);
+                            var token = new TokenResponse
+                            {
+                                AccessToken = jtoken["access_token"].ToString(),
+                                RefreshToken = jtoken["refresh_token"].ToString()
+                            };
+                            credential = new UserCredential(flow, Environment.UserName, token);
+                        }
+                    }
+                }
+                catch (Exception ex) when (ex is DirectoryNotFoundException || ex is FileNotFoundException)
+                {
+                    //Automatic sign in attempt --> No user found --> stop 
+                    if (b == null)
+                        return;
+                    //User sign attempt --> Create new user --> log in to service
+                    using(var stream = new FileStream("../../client_secrets.json", FileMode.Open, FileAccess.Read))
+                    {
+                        credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
+                            GoogleClientSecrets.FromStream(stream).Secrets,
+                            Scopes,
+                            "user",
+                            CancellationToken.None,
+                            new FileDataStore(credPath, true));
+                    }              
+                }
+                service = new CalendarService(new BaseClientService.Initializer()
+                {
+                    HttpClientInitializer = credential,
+                    ApplicationName = "Optimeet Calendar",
+                });
+                GoogleSignInButton.Tag = "SignOut";
+                GoogleBlock.Text = "Sign out of Google account";
+                //Show message on user attempt
+                if(b!=null)
+                MessageBox.Show("Successfully loaded account! " + credential.UserId+", using for "+service.ApplicationName);
+            }
+            
+        }
+
+        private string CreateEvent(Meeting m, bool invite)
+        {
+            List<EventAttendee> eventAttendees = new List<EventAttendee>();
+            if(invite)
+                foreach (Contact c in m.GetPeople())
+                    if(c.Email != null)
+                        eventAttendees.Add(new EventAttendee
+                        {
+                            DisplayName = c.Name,
+                            Email = c.Email
+                        });
+            var myEvent = new Event
+            {
+                Summary = m.Title,
+                Location = m.GetLocation().ToString(),
+                ColorId = "6",
+
+                Start = new EventDateTime()
+                {
+                    DateTime = m.GetMeetingDate(),
+                    TimeZone = DateTimeZoneProviders.Tzdb.GetSystemDefault().ToString()
+                },
+                End = new EventDateTime()
+                {
+                    DateTime = m.GetMeetingDate().AddMinutes(fm.Settings[FileManager.SETTING_3][1]),
+                    TimeZone = DateTimeZoneProviders.Tzdb.GetSystemDefault().ToString()
+                },
+                Attendees = eventAttendees
+            };
+
+            var Event = service.Events.Insert(myEvent, "primary");
+            Event.SendNotifications = true;
+            var results = Event.Execute();
+            MessageBox.Show("The meeting was successfully inserted to your google calendar");
+            return results.Id;
         }
     }
 }

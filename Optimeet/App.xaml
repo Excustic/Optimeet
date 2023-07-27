@@ -4,7 +4,8 @@
              xmlns:local="clr-namespace:Optimeet"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-        <ControlTemplate x:Key="PushPinTemplate">
+        <ResourceDictionary>
+            <ControlTemplate x:Key="PushPinTemplate">
             <Border Height="20" Width="20" BorderBrush="Transparent" Background="Silver" CornerRadius="20">
                 
             </Border>
@@ -101,5 +102,12 @@
                 </Setter.Value>
             </Setter>
         </Style>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Light.xaml"/>
+                <ResourceDictionary Source="/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Defaults.xaml"/>
+                <ResourceDictionary Source="/MaterialDesignColors;component/Themes/Recommended/Primary/MaterialDesignColor.Teal.xaml"/>
+                <ResourceDictionary Source="/MaterialDesignColors;component/Themes/Recommended/Accent/MaterialDesignColor.Lime.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

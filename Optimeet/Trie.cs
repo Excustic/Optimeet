@@ -58,7 +58,7 @@ namespace Optimeet
 
         private TrieNode<T> FindNode(string name, TrieNode<T> temp)
         {            
-            return name.Length == 1 ? temp.children[cti(name[0])] : FindNode(name.Substring(1), temp.children[cti(name[0])]);
+            return name == "" ? _root : name.Length == 1 ? temp.children[cti(name[0])] : FindNode(name.Substring(1), temp.children[cti(name[0])]);
         }
 
         public T Find(string name)

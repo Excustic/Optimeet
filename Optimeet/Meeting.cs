@@ -18,6 +18,8 @@ namespace Optimeet
         private List<Contact> People;
         [DataMember]
         private Location MeetingLocation;
+        [DataMember]
+        public string googleId { get; set; }
 
         public Meeting(string t, DateTime d, List<Contact> p)
         {

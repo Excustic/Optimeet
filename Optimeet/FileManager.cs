@@ -22,7 +22,8 @@ namespace Optimeet
         public Dictionary<string, int[]> Settings;
         private static FileManager _instance;
         public const string SETTING_1 = "Number of place suggestions";
-        public const string SETTING_2 = "Search radius (m)";
+        public const string SETTING_2 = "Search radius (metres)";
+        public const string SETTING_3 = "Meeting duration (minutes)";
         private FileManager() 
         {
             LoadContacts();
@@ -54,15 +55,18 @@ namespace Optimeet
                         int[] arr = new int[] {
                         int.Parse(values[1]),
                         int.Parse(values[2]),
-                        int.Parse(values[3])};
+                        int.Parse(values[3]),
+                        int.Parse(values[4])};
                         Settings.Add(values[0], arr);
                     }
                 }
             }
             catch(FileNotFoundException)
             {
-                Settings.Add(SETTING_1, new int[] { 3, 5, 15 });
-                Settings.Add(SETTING_2, new int[] { 50, 800, 5000 });
+                //Name, [minimum, default, maximum, frequency(tick)]
+                Settings.Add(SETTING_1, new int[] { 3, 5, 15, 1});
+                Settings.Add(SETTING_2, new int[] { 300, 800, 5000, 100});
+                Settings.Add(SETTING_3, new int[] { 30, 60, 300, 30});
                 SaveSettings();
             }
         }
@@ -75,7 +79,7 @@ namespace Optimeet
                 string rootpath = path_meetings.Substring(0, path_meetings.Length - splits[splits.Length - 1].Length);
                 Directory.CreateDirectory(rootpath);
             }
-            string csv = string.Join(Environment.NewLine, Settings.Select(d => $"{d.Key},{d.Value[0]},{d.Value[1]},{d.Value[2]}"));
+            string csv = string.Join(Environment.NewLine, Settings.Select(d => $"{d.Key},{d.Value[0]},{d.Value[1]},{d.Value[2]},{d.Value[3]}"));
             File.WriteAllText(path_settings, csv);
         }
 

@@ -6,6 +6,7 @@
         xmlns:m="clr-namespace:Microsoft.Maps.MapControl.WPF;assembly=Microsoft.Maps.MapControl.WPF" 
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Optimeet"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
@@ -47,8 +48,24 @@
                             <StackPanel x:Name="ContactBook" Height="Auto" Width="Auto"></StackPanel>
                     </ScrollViewer>
                 </DockPanel>
-            <Button Padding="20" Width="200" Height="70" BorderBrush="Transparent" x:Name="AddContactButton" Grid.Column="1" Grid.Row="2" Panel.ZIndex="3" VerticalAlignment="Bottom" Template="{StaticResource NoMouseOverButtonTemplate}" Background="MediumSpringGreen" FontSize="20" HorizontalAlignment="Right" Margin="0,50,30,30" Click="CreateContact">
+            <Button Padding="20" Width="200" Height="70" BorderBrush="Transparent" x:Name="AddContactButton" Grid.Column="1" Grid.Row="2" Panel.ZIndex="3" VerticalAlignment="Bottom" Template="{StaticResource NoMouseOverButtonTemplate}" Background="MediumSpringGreen" FontSize="20" HorizontalAlignment="Right" Margin="0,0,0,0" Click="CreateContact">
                 + Add contact
+                <Button.Resources>
+                    <Style TargetType="Border">
+                        <Setter Property="CornerRadius" Value="15"/>
+                    </Style>
+                </Button.Resources>
+                <Button.Effect>
+                    <DropShadowEffect BlurRadius="10" Direction="215" Opacity="0.6"/>
+                </Button.Effect>
+            </Button>
+            <Button Padding="20" Width="300" Height="70" BorderBrush="Transparent" Grid.Column="1" Grid.Row="2" Panel.ZIndex="3" VerticalAlignment="Bottom" Template="{StaticResource NoMouseOverButtonTemplate}" x:Name="SearchContactWrapper" Background="WhiteSmoke" FontSize="20" HorizontalAlignment="Left" Margin="0,0,0,0" Click="SearchContact">
+                <StackPanel Orientation="Horizontal">
+                    <TextBox x:Name="SearchContactName" FontSize="18" Width="240" AllowDrop="True" Background="WhiteSmoke" BorderThickness="0" materialDesign:HintAssist.Hint="Search contact"></TextBox>
+                    <Button x:Name="SearchContactButton" Tag="Search" HorizontalAlignment="Right" Template="{StaticResource NoMouseOverButtonTemplate}" BorderBrush="Transparent" Background="Transparent" MouseEnter="Highlight" MouseLeave="Unhighlight">
+                        <Image x:Name="SearchContactImage" Source="Assets/search.png" Height="25px" Margin="10,0,0,0" MouseLeftButtonDown="JumpToAddress"/>
+                    </Button>
+                </StackPanel>
                 <Button.Resources>
                     <Style TargetType="Border">
                         <Setter Property="CornerRadius" Value="15"/>
@@ -95,6 +112,7 @@
                                 <ComboBoxItem x:Name="restaurant">Restaurant</ComboBoxItem>
                                 <ComboBoxItem>Park</ComboBoxItem>
                                 <ComboBoxItem>Cafe</ComboBoxItem>
+                                <ComboBoxItem>Bar</ComboBoxItem>
                             </ComboBox>
                             <TextBlock FontWeight="Bold" FontFamily="Lucida Sans">Pick a Time and date</TextBlock>
                             <StackPanel Orientation="Horizontal" Height="22" Margin="0,5,0,0">
@@ -171,10 +189,10 @@
                             </StackPanel>
                         </Button>
                         <StackPanel Orientation="Vertical" x:Name="SettingsMenu" Margin="40,10,0,0">
-                            <Button x:Name="GoogleSignInButton" Background="Snow">
+                            <Button x:Name="GoogleSignInButton" Tag="SignIn" Background="Snow" Click="SignInGoogleAccount">
                                 <StackPanel Orientation="Horizontal">
                                 <Image Source="Assets/google.png" Width="15" Height="15"></Image>
-                            <TextBlock Margin="10,0,0,0"> Sign in With Google</TextBlock>
+                            <TextBlock x:Name="GoogleBlock" Margin="10,0,0,0"> Sign in with Google</TextBlock>
                             </StackPanel>
                             </Button>
                             
