@@ -20,16 +20,26 @@
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <RowDefinition Height="73.6"></RowDefinition>
+                <RowDefinition Height="90"></RowDefinition>
                 <RowDefinition/>
             </Grid.RowDefinitions>
 
-            <Image Source="Assets/logo.png" Margin="19,10,18.8,0.4"/>
-            <Image x:Name="CloseButton" Grid.Column="1" Grid.Row="0" Source="Assets/close.png" Width="30" ToolTip="Close" MouseLeftButtonDown="CloseWindow" HorizontalAlignment="Right" Margin="0,0,27,0.4" Panel.ZIndex="3"  />
-            <Image x:Name="MaximizeButton" Grid.Row="0" Grid.Column="1" Source="Assets/maximize.png" Width="30" Height="30" HorizontalAlignment="Right" Margin="0,22,76,22.4" MouseLeftButtonDown="MaximizeWindow" Panel.ZIndex="3" />
-            <Image x:Name="MinimizeButton" Grid.Column="1" Source="Assets/minimize.png" HorizontalAlignment="Right" Width="40" Height="3" Margin="0,36,130,35.4" MouseLeftButtonDown="MinimizeWindow" Panel.ZIndex="3"/>
-            <Image x:Name="DraggableButton" Grid.Column="1" Grid.Row="0" Source="Assets/Draggable.png" VerticalAlignment="Top" Width="200" HorizontalAlignment="Center" Margin="103,0,341,0" MouseDown="DragWindow" Panel.ZIndex="3"/>
-            <Rectangle Height="100" Width="250" Stroke="Transparent" StrokeThickness="5"
+            <Image Source="Assets/logo.png" Margin="19,10,18.8,0.4" Height="60"/>
+            <Image x:Name="CloseButton" Grid.Column="1" Grid.Row="0" Source="Assets/close.png" Width="50" ToolTip="Close" MouseLeftButtonDown="CloseWindow" HorizontalAlignment="Right" Margin="0" Panel.ZIndex="3" Height="50" VerticalAlignment="Top"/>
+            <Image x:Name="MaximizeButton" Grid.Row="0" Grid.Column="1" Source="Assets/maximize.png" Width="50" Height="50" HorizontalAlignment="Right" Margin="0,0,50,0" MouseLeftButtonDown="MaximizeWindow" Panel.ZIndex="3" VerticalAlignment="Top" ToolTip="Maximize"/>
+            <Image x:Name="MinimizeButton" Grid.Column="1" Source="Assets/minimize.png" HorizontalAlignment="Right" Width="50" Margin="0,0,100,0" MouseLeftButtonDown="MinimizeWindow" Panel.ZIndex="3" RenderTransformOrigin="0.559,-0.546" Height="46" VerticalAlignment="Top" ToolTip="Minimize"/>
+            <Image x:Name="DraggableButton" Grid.Column="1" Grid.Row="0" Source="Assets/Draggable.png" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="103,0,341,80.6" MouseDown="DragWindow" Panel.ZIndex="3" RenderTransformOrigin="0.5,0.5">
+                <Image.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform ScaleY="3.23" ScaleX="1"/>
+                        <SkewTransform/>
+                        <RotateTransform/>
+                        <TranslateTransform/>
+                    </TransformGroup>
+                </Image.RenderTransform>
+            </Image>
+            <TextBlock Grid.Column="1" Grid.Row="0" Margin="103,0,341,0" Panel.ZIndex="3" HorizontalAlignment="Center" Height="20" Foreground="AntiqueWhite" VerticalAlignment="Top">Drag me</TextBlock>
+            <Rectangle Height="89" Width="224" Stroke="Transparent" StrokeThickness="5"
             RadiusX="30" RadiusY="30"
             Fill="White" Canvas.Left="20" Canvas.Top="20" Grid.Column="1" Panel.ZIndex="2" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-27,-63,0">
                 <Rectangle.Effect>
@@ -45,9 +55,9 @@
                 <TextBlock DockPanel.Dock="Top" HorizontalAlignment="Center" FontSize="44" Margin="0,50,0,0">Saved Contacts</TextBlock>
                 <Border BorderBrush="Gray" BorderThickness="0.8" DockPanel.Dock="Top" Margin="0,10,0,0"/>
                 <ScrollViewer DockPanel.Dock="Bottom" Margin="0,0,20,0" VerticalScrollBarVisibility="Auto">
-                            <StackPanel x:Name="ContactBook" Height="Auto" Width="Auto"></StackPanel>
-                    </ScrollViewer>
-                </DockPanel>
+                    <StackPanel x:Name="ContactBook" Height="Auto" Width="Auto"></StackPanel>
+                </ScrollViewer>
+            </DockPanel>
             <Button Padding="20" Width="200" Height="70" BorderBrush="Transparent" x:Name="AddContactButton" Grid.Column="1" Grid.Row="2" Panel.ZIndex="3" VerticalAlignment="Bottom" Template="{StaticResource NoMouseOverButtonTemplate}" Background="MediumSpringGreen" FontSize="20" HorizontalAlignment="Right" Margin="0,0,0,0" Click="CreateContact">
                 + Add contact
                 <Button.Resources>
@@ -59,7 +69,7 @@
                     <DropShadowEffect BlurRadius="10" Direction="215" Opacity="0.6"/>
                 </Button.Effect>
             </Button>
-            <Button Padding="20" Width="300" Height="70" BorderBrush="Transparent" Grid.Column="1" Grid.Row="2" Panel.ZIndex="3" VerticalAlignment="Bottom" Template="{StaticResource NoMouseOverButtonTemplate}" x:Name="SearchContactWrapper" Background="WhiteSmoke" FontSize="20" HorizontalAlignment="Left" Margin="0,0,0,0" Click="SearchContact">
+            <Button Padding="20" Width="300" Height="70" BorderBrush="Transparent" Grid.Column="1" Grid.Row="1" Panel.ZIndex="3" VerticalAlignment="Top" Template="{StaticResource NoMouseOverButtonTemplate}" x:Name="SearchContactWrapper" Background="WhiteSmoke" FontSize="20" HorizontalAlignment="Right" Margin="0,31.4,0,0" Click="SearchContact">
                 <StackPanel Orientation="Horizontal">
                     <TextBox x:Name="SearchContactName" FontSize="18" Width="240" AllowDrop="True" Background="WhiteSmoke" BorderThickness="0" materialDesign:HintAssist.Hint="Search contact"></TextBox>
                     <Button x:Name="SearchContactButton" Tag="Search" HorizontalAlignment="Right" Template="{StaticResource NoMouseOverButtonTemplate}" BorderBrush="Transparent" Background="Transparent" MouseEnter="Highlight" MouseLeave="Unhighlight">
@@ -98,8 +108,8 @@
                                 <Button x:Name="ContactSaveButton" Tag="" Margin="10,0,0,0" Click="SaveContact">Save contact</Button>
                             </StackPanel>
                         </StackPanel>
-                        <Button x:Name="CreateButton" HorizontalAlignment="Left" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" BorderBrush="Transparent" MouseEnter="Highlight" Click="CreateMeeting" MouseLeave="Unhighlight" Height="60" Margin="0,0,0.4,0">
-                            <StackPanel x:Name="MeetingPanel" Orientation="Horizontal" Margin="40,0,0,0">
+                        <Button x:Name="CreateButton" HorizontalAlignment="Left" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" BorderBrush="Transparent" MouseEnter="Highlight" Click="CreateMeeting" MouseLeave="Unhighlight" Height="60" Margin="0,0,0.4,0" Width="360">
+                            <StackPanel x:Name="MeetingPanel" Orientation="Horizontal" Margin="40,0,0,0" Width="320" HorizontalAlignment="Left">
                                 <Image x:Name="CreateImg" Source="Assets/create.png" Width="40" Margin="0,0,20,0" HorizontalAlignment="Left"/>
                                 <TextBlock Background="Transparent" VerticalAlignment="Center" FontFamily="Helvetica" FontSize="15"  >Create a new meeting</TextBlock>
                             </StackPanel>
@@ -141,11 +151,11 @@
                         <fa:ImageAwesome x:Name="MeetingLoadingIcon" Visibility="Collapsed" Icon="Spinner" Spin="True" SpinDuration="3" Height="30"/>
                         <StackPanel Orientation="Horizontal" x:Name="SaveMenu" Margin="40,20,0,0" HorizontalAlignment="Left">
                             <Button Margin="0,0,10,0" Click="CancelMeeting">Cancel</Button>
-                            <Button x:Name="MeetingSaveButton" Tag="" Margin="10,0,0,0" Click="SaveMeeting">Suggest a meeting place</Button>
+                            <Button x:Name="MeetingSaveButton" Tag="" Margin="10,0,0,0" Click="SaveMeeting">Show place suggestions</Button>
                         </StackPanel>
 
-                        <Button x:Name="MeetingsButton" HorizontalAlignment="Left" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" BorderBrush="Transparent" MouseEnter="Highlight" Click="OpenMeetings" MouseLeave="Unhighlight" Height="60" Margin="0,10,0,0">
-                            <StackPanel Orientation="Horizontal" Margin="40,0,0,0">
+                        <Button x:Name="MeetingsButton" HorizontalAlignment="Left" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" BorderBrush="Transparent" MouseEnter="Highlight" Click="OpenMeetings" MouseLeave="Unhighlight" Height="60" Margin="0,10,0,0" Width="360">
+                            <StackPanel Orientation="Horizontal" Margin="40,0,0,0" Width="320">
                                 <Image x:Name="HistoryImg" Source="Assets/history.png" Width="40" Margin="0,0,20,0" HorizontalAlignment="Left"/>
                                 <TextBlock Background="Transparent" VerticalAlignment="Center" FontFamily="Helvetica" FontSize="15">My meetings</TextBlock>
                             </StackPanel>
@@ -176,14 +186,14 @@
                                 <StackPanel x:Name="PastList" Visibility="Collapsed"></StackPanel>
                             </ScrollViewer>
                         </StackPanel>
-                        <Button x:Name="ContactsButton" Click="OpenCloseContactsBook" HorizontalAlignment="Left" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" BorderBrush="Transparent" MouseEnter="Highlight" MouseLeave="Unhighlight" Height="60" Margin="0,10,0,0">
-                            <StackPanel Orientation="Horizontal" Margin="40,0,0,0">
+                        <Button x:Name="ContactsButton" Click="OpenCloseContactsBook" HorizontalAlignment="Left" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" BorderBrush="Transparent" MouseEnter="Highlight" MouseLeave="Unhighlight" Height="60" Margin="0,10,0,0" Width="360">
+                            <StackPanel Orientation="Horizontal" Margin="40,0,0,0" Width="320">
                                 <Image x:Name="SettingImg" Source="Assets/people.png" Width="40" Margin="0,0,20,0" HorizontalAlignment="Left"/>
                                 <TextBlock Background="Transparent" VerticalAlignment="Center" FontFamily="Helvetica" FontSize="15">Contacts</TextBlock>
                             </StackPanel>
                         </Button>
-                        <Button x:Name="SettingsButton" HorizontalAlignment="Left" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" BorderBrush="Transparent" MouseEnter="Highlight" Click="OpenCloseSettings" MouseLeave="Unhighlight" Height="60" Margin="0,10,0,0">
-                            <StackPanel Orientation="Horizontal" Margin="40,0,0,0">
+                        <Button x:Name="SettingsButton" HorizontalAlignment="Left" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" BorderBrush="Transparent" MouseEnter="Highlight" Click="OpenCloseSettings" MouseLeave="Unhighlight" Height="60" Margin="0,10,0,0" Width="360">
+                            <StackPanel Orientation="Horizontal" Margin="40,0,0,0" Width="310">
                                 <Image x:Name="SettingsImg" Source="Assets/settings.png" Width="40" Margin="0,0,20,0" HorizontalAlignment="Left"/>
                                 <TextBlock Background="Transparent" VerticalAlignment="Center" FontFamily="Helvetica" FontSize="15">Settings</TextBlock>
                             </StackPanel>
@@ -191,16 +201,16 @@
                         <StackPanel Orientation="Vertical" x:Name="SettingsMenu" Margin="40,10,0,0">
                             <Button x:Name="GoogleSignInButton" Tag="SignIn" Background="Snow" Click="SignInGoogleAccount">
                                 <StackPanel Orientation="Horizontal">
-                                <Image Source="Assets/google.png" Width="15" Height="15"></Image>
-                            <TextBlock x:Name="GoogleBlock" Margin="10,0,0,0"> Sign in with Google</TextBlock>
-                            </StackPanel>
+                                    <Image Source="Assets/google.png" Width="15" Height="15"></Image>
+                                    <TextBlock x:Name="GoogleBlock" Margin="10,0,0,0"> Sign in with Google</TextBlock>
+                                </StackPanel>
                             </Button>
-                            
+
                         </StackPanel>
-                        <Button x:Name="InfoButton" HorizontalAlignment="Left" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" BorderBrush="Transparent" MouseEnter="Highlight" Click="OpenAbout" MouseLeave="Unhighlight" Height="60" Margin="0,10,0,0">
-                            <StackPanel Orientation="Horizontal" Margin="40,0,0,0">
+                        <Button x:Name="InfoButton" HorizontalAlignment="Left" Template="{StaticResource NoMouseOverButtonTemplate}" Background="Transparent" BorderBrush="Transparent" MouseEnter="Highlight" Click="OpenAbout" MouseLeave="Unhighlight" Height="60" Margin="0,10,0,0" Width="360">
+                            <StackPanel Orientation="Horizontal" Margin="40,0,0,0" Width="320">
                                 <Image x:Name="InfoImg" Source="Assets/about.png" Width="40" Margin="0,0,20,0" HorizontalAlignment="Left"/>
-                                <TextBlock Background="Transparent" VerticalAlignment="Center" FontFamily="Helvetica" FontSize="15">Help</TextBlock>
+                                <TextBlock Background="Transparent" VerticalAlignment="Center" FontFamily="Helvetica" FontSize="15">About Project</TextBlock>
                             </StackPanel>
                         </Button>
                     </StackPanel>

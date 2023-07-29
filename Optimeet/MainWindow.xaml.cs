@@ -12,6 +12,7 @@ using Newtonsoft.Json.Linq;
 using NodaTime;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Threading;
@@ -135,8 +136,24 @@ namespace Optimeet
             AddContactButton.Visibility = Visibility.Collapsed;
             SearchContactWrapper.Visibility = Visibility.Collapsed;
             //Clear elements
-            mapLayer.Children.Clear();
-            ContactList.Children.Clear();
+            mapLayer.Children.Clear(); //Map
+            ////Create Meeting menu elements
+            ContactList.Children.Clear(); 
+            MeetingSubject.Text = "";
+            MeetingPlaceFilter.SelectedIndex = 0;
+            DateTimePicker1.SelectedDate = null;
+            HoursBox.SelectedIndex = 0;
+            MinutesBox.SelectedIndex = 0;
+            SearchContactName.Text = "";
+            MeetingSaveButton.Content = "Show place suggestions";
+            MeetingSaveButton.Tag = "";
+            MeetingLoadingIcon.Visibility = Visibility.Collapsed;
+            SuggestionsList.Children.Clear();
+            ////Create Contact menu element
+            CreateContact_Name.Text = "";
+            SearchName.Text = "";
+            CreateContact_Address.Text = "";
+            CreateContact_Mail.Text = "";
         }
 
         private void ComboBoxStartUpHrs(object sender, RoutedEventArgs e)
@@ -215,21 +232,34 @@ namespace Optimeet
             AddContactList();
             foreach (CheckBox box in ContactList.Children)
                 box.Click += (object sender2, RoutedEventArgs e2) =>
-                 {
-                     if ((bool)box.IsChecked) {
-                         Location l = ((Contact)box.Content).GetLocation();
-                         Pushpin p = new Pushpin()
-                         {
-                             Height = 20,
-                             Width = 20,
-                             Location = new Microsoft.Maps.MapControl.WPF.Location(l.Latitude, l.Longitude)
-                         };
-                         //Create a template for a contact pushpin
-                         ControlTemplate t = CreateTemplatePushpin(box);
-                         p.Template = t;
-                         ApplicationMap.SetView(p.Location, 15f);
-                         mapLayer.Children.Add(p);
-                     }
+                {
+                Location l = ((Contact)box.Content).GetLocation();
+                    if ((bool)box.IsChecked) {
+                        Pushpin p = new Pushpin()
+                        {
+                            Height = 20,
+                            Width = 20,
+                            Location = new Microsoft.Maps.MapControl.WPF.Location(l.Latitude, l.Longitude)
+                        };
+                        //Create a template for a contact pushpin
+                        ControlTemplate t = CreateTemplatePushpin(box);
+                        p.Template = t;
+                        ApplicationMap.SetView(p.Location, 15f);
+                        mapLayer.Children.Add(p);
+                    }
+                    else
+                    {
+                        var children = mapLayer.Children.GetEnumerator();
+                        while(children.MoveNext())
+                        {
+                            Pushpin p = (Pushpin)children.Current;
+                            if (p.Location.Equals(new Microsoft.Maps.MapControl.WPF.Location(l.Latitude, l.Longitude)))
+                            {
+                                mapLayer.Children.Remove(p);
+                                return;
+                            }
+                        }
+                    }
                  };
             if(service!=null)
             {
@@ -342,13 +372,17 @@ namespace Optimeet
 
         private void OpenAbout(object sender, RoutedEventArgs e)
         {
-
+            System.Diagnostics.Process.Start(new ProcessStartInfo
+            {
+                FileName = "https://github.com/Excustic/Optimeet",
+                UseShellExecute = true
+            });
         }
 
         private void CancelMeeting(object sender, RoutedEventArgs e)
         {
             ResetViews();
-            ApplicationMap.Children.Clear();
+            mapLayer.Children.Clear();
             if(service != null)
             {
                 CreateMenu.Children.RemoveAt(CreateMenu.Children.Count-1);
@@ -391,7 +425,8 @@ namespace Optimeet
                     fm.Meetings.Add(m);
                     fm.SaveMeetings();
                     MeetingSaveButton.Tag = "";
-                    ApplicationMap.Children.Clear();
+                    mapLayer.Children.Clear();
+                    SuggestionsList.Children.Clear();
                     ResetViews();
                     //Apply the addition
                     FutureList.Children.Clear();
@@ -407,6 +442,7 @@ namespace Optimeet
                     MeetingLoadingIcon.Visibility = Visibility.Visible;
                     ShowSuggestions(m);
                     MeetingSaveButton.Tag = "";
+                    MeetingSaveButton.IsEnabled = false;
                 }
             }
             else
@@ -421,14 +457,14 @@ namespace Optimeet
 
         private async void ShowSuggestions(Meeting m)
         {
-        Location[] results = await m.SuggestLocations(MeetingPlaceFilter.Text);
+        Location[] results = await m.SuggestLocations(MeetingPlaceFilter.Text);     
         for (int i = 0; i < results.Length; i++)
         {
             //Build the box
             Image img = new Image();
             img.Source = await helper.BitmapImageFromUrl(results[i].PhotoReference); 
             TextBlock PlaceTitle = new TextBlock();
-            PlaceTitle.Text = results[i].Name;
+            PlaceTitle.Text = (i+1)+": "+results[i].Name;
             PlaceTitle.Margin = new Thickness(0, 5, 0, 0);
             TextBlock PlaceAddress = new TextBlock();
             PlaceAddress.Text = results[i].Address;
@@ -467,7 +503,7 @@ namespace Optimeet
                 Text = (i+1).ToString()
             };
             p.Location = new Microsoft.Maps.MapControl.WPF.Location(results[i].Latitude, results[i].Longitude);
-            ApplicationMap.Children.Add(p);
+            mapLayer.Children.Add(p);
             //Make a field in scope so it can be used later in click without worrying about 'i' changing
             Location currentLoc = results[i];
             b.Click += (object sender, RoutedEventArgs args) => {
@@ -487,7 +523,15 @@ namespace Optimeet
             }
             MeetingSaveButton.Content = "Save";
             MeetingSaveButton.Tag = "";
-        MeetingLoadingIcon.Visibility = Visibility.Collapsed;
+            MeetingSaveButton.IsEnabled = true;
+            //Prevents a bug from showing previous suggestions of a meeting that was cancelled
+            if (CreateButton.IsEnabled)
+            {
+                SuggestionsList.Children.Clear();
+                mapLayer.Children.Clear();
+                return;
+            }
+            MeetingLoadingIcon.Visibility = Visibility.Collapsed;
         SuggestionsScroll.Visibility = Visibility.Visible;
         }
 
@@ -665,7 +709,7 @@ namespace Optimeet
                 {
                     if (MessageBox.Show("Send mail invitation to attendees", "Do you want to perform this action?", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
                     {
-                        
+                        CreateEvent(m, true);
                     }
                 };
                 //Encapsulate data in stackpanels
@@ -929,15 +973,16 @@ namespace Optimeet
                 }
                 Contact contact = new Contact(name, mail);
                 contact.SetLocation(CreateContactLocation);
-                fm.Contacts.Add(contact.Name, contact);
                 //if the contact that is being saved exists already and was edited
                 if (ContactSaveButton.Tag != null && !ContactSaveButton.Tag.Equals(""))
                 {
-                    fm.Contacts.Delete(ContactSaveButton.Tag.ToString());
+                    fm.Contacts.Edit(ContactSaveButton.Tag.ToString(), contact);
                     ContactSaveButton.Tag = "";
                 }
+                else
+                    fm.Contacts.Add(contact.Name, contact);
                 fm.SaveContacts();
-                ApplicationMap.Children.Clear();
+                mapLayer.Children.Clear();
                 //Clear data in Create Contact window
                 CreateContact_Address.Text = "";
                 CreateContact_Mail.Text = "";
@@ -966,12 +1011,13 @@ namespace Optimeet
             {
                 CreateContact_List.Items.Clear();
                 List<string> suggestions = await helper.SearchLocation(CreateContact_Address.Text);
-                foreach (string suggestion in suggestions)
-                {
-                    ListBoxItem temp = new ListBoxItem() { Content = suggestion };
-                    temp.Selected += CreateContact_List_Selected;
-                    CreateContact_List.Items.Add(temp);
-                }
+                if(suggestions!=null)
+                    foreach (string suggestion in suggestions)
+                    {
+                        ListBoxItem temp = new ListBoxItem() { Content = suggestion };
+                        temp.Selected += CreateContact_List_Selected;
+                        CreateContact_List.Items.Add(temp);
+                    }
             }
             else
                 CreateContact_List.Items.Clear();
@@ -990,7 +1036,7 @@ namespace Optimeet
                     Location = new Microsoft.Maps.MapControl.WPF.Location(CreateContactLocation.Latitude, CreateContactLocation.Longitude)
                 };
                 ApplicationMap.SetView(p.Location, 17f);
-                ApplicationMap.Children.Add(p);            
+                mapLayer.Children.Add(p);            
             }
         }
 
@@ -1157,7 +1203,7 @@ namespace Optimeet
                         }
                     }
                 }
-                catch (Exception ex) when (ex is DirectoryNotFoundException || ex is FileNotFoundException)
+                catch (Exception ex) when (ex is DirectoryNotFoundException || ex is FileNotFoundException || ex is IndexOutOfRangeException)
                 {
                     //Automatic sign in attempt --> No user found --> stop 
                     if (b == null)
@@ -1182,7 +1228,7 @@ namespace Optimeet
                 GoogleBlock.Text = "Sign out of Google account";
                 //Show message on user attempt
                 if(b!=null)
-                MessageBox.Show("Successfully loaded account! " + credential.UserId+", using for "+service.ApplicationName);
+                    MessageBox.Show("Successfully loaded google account: " + credential.UserId);
             }
             
         }
@@ -1214,7 +1260,8 @@ namespace Optimeet
                     DateTime = m.GetMeetingDate().AddMinutes(fm.Settings[FileManager.SETTING_3][1]),
                     TimeZone = DateTimeZoneProviders.Tzdb.GetSystemDefault().ToString()
                 },
-                Attendees = eventAttendees
+                Attendees = eventAttendees,
+                Description = "This meeting was created using Optimeet."
             };
 
             var Event = service.Events.Insert(myEvent, "primary");

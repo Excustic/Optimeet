@@ -24,6 +24,7 @@ namespace Optimeet
         public const string SETTING_1 = "Number of place suggestions";
         public const string SETTING_2 = "Search radius (metres)";
         public const string SETTING_3 = "Meeting duration (minutes)";
+        public const string path_keys = "keys.json";
         private FileManager() 
         {
             LoadContacts();

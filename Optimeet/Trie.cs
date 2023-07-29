@@ -53,7 +53,7 @@ namespace Optimeet
 
         public void Edit(string name, T newValue)
         {
-            FindNode(name, _root).Value = newValue;
+            FindNode(FormatName(name), _root).Value = newValue;
         }
 
         private TrieNode<T> FindNode(string name, TrieNode<T> temp)
