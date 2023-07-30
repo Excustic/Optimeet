@@ -1,9 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -86,9 +84,11 @@ namespace Optimeet
                 string result = await GetAsync(url);
                 JObject res = JsonConvert.DeserializeObject<JObject>(result);
                 // return Location struct by extracting the latitude and longitude from the JSON object
-                return new Location() 
-                { Latitude = float.Parse(res["results"][0]["geometry"]["location"]["lat"].ToString()), 
-                    Longitude = float.Parse(res["results"][0]["geometry"]["location"]["lng"].ToString()) };
+                return new Location()
+                {
+                    Latitude = float.Parse(res["results"][0]["geometry"]["location"]["lat"].ToString()),
+                    Longitude = float.Parse(res["results"][0]["geometry"]["location"]["lng"].ToString())
+                };
             }
             catch (Exception e)
             {
@@ -104,7 +104,8 @@ namespace Optimeet
         /// <returns>The converted address</returns>
         public async Task<string> ReverseGeocode(float Latitude, float Longitude)
         {
-            try { 
+            try
+            {
                 var url = String.Format(baseUrlRGC, ApiKey, Latitude, Longitude);
                 string result = await GetAsync(url);
                 JObject res = JsonConvert.DeserializeObject<JObject>(result);
@@ -112,7 +113,7 @@ namespace Optimeet
             }
             catch (Exception e)
             {
-                Console.WriteLine("ReverseGeocode failed: "+e.Message);
+                Console.WriteLine("ReverseGeocode failed: " + e.Message);
             }
             return null;
         }
@@ -129,7 +130,7 @@ namespace Optimeet
                 string result = await GetAsync(url);
                 JArray res = JArray.Parse(JsonConvert.DeserializeObject<JObject>(result)["predictions"].ToString()); //Nested serialization inside another - this gets the list of outputs only
                 List<string> PlaceResults = new List<string>();
-                foreach(JObject obj in res)
+                foreach (JObject obj in res)
                     PlaceResults.Add(obj["description"].ToString());
                 return PlaceResults;
             }
@@ -137,7 +138,7 @@ namespace Optimeet
             {
                 MessageBox.Show("Please check your internet connection and try again", "Error - Could not connect to services");
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Console.Write("Error occured: " + e.Message);
             }
@@ -171,7 +172,7 @@ namespace Optimeet
                     Reccomendations = SortPlacesByDistance(Reccomendations, l, NumOfResults);
                 return Reccomendations;
             }
-            catch(HttpRequestException)
+            catch (HttpRequestException)
             {
                 MessageBox.Show("Please check your internet connection and try again", "Error - Could not connect to services");
                 return new Location[] { };
@@ -216,7 +217,7 @@ namespace Optimeet
             for (int i = 0; i < temp.Length; i++)
             {
                 JObject j = JsonConvert.DeserializeObject<JObject>(Locations[i].ToString());
-                if (j[ratings]!=null && j[ReviewCount]!=null && double.Parse(j[ratings].ToString()) >= 3 && int.Parse(j[ReviewCount].ToString()) > 40)
+                if (j[ratings] != null && j[ReviewCount] != null && double.Parse(j[ratings].ToString()) >= 3 && int.Parse(j[ReviewCount].ToString()) > 40)
                     temp[open++] = ConvertJsonToLocation(j);
             }
             Location[] Places = new Location[open];

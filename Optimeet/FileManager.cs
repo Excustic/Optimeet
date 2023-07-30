@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
 
 namespace Optimeet
 {
+    /// <summary>
+    /// A helper singleton class used for storing and retrieving contacts, meetings and application settings
+    /// </summary>
     public sealed class FileManager
     {
         readonly string path_contacts = Path.Combine(Environment.GetFolderPath(
@@ -24,14 +25,18 @@ namespace Optimeet
         public const string SETTING_1 = "Number of place suggestions";
         public const string SETTING_2 = "Search radius (metres)";
         public const string SETTING_3 = "Meeting duration (minutes)";
+        public const string SETTING_4 = "Define upcoming meetings deadline (weeks)";
         public const string path_keys = "keys.json";
-        private FileManager() 
+        private FileManager()
         {
             LoadContacts();
             LoadMeetings();
             LoadSettings();
         }
-
+        /// <summary>
+        /// Initiates the singleton object
+        /// </summary>
+        /// <returns>A <see cref="FileManager"/> instance</returns>
         public static FileManager GetInstance()
         {
             if (_instance == null)
@@ -41,13 +46,15 @@ namespace Optimeet
             return _instance;
         }
 
-
+        /// <summary>
+        /// Loads the settings from settings.csv file
+        /// </summary>
         private void LoadSettings()
         {
             Settings = new Dictionary<string, int[]>();
             try
             {
-                using(var reader = new StreamReader(path_settings))
+                using (var reader = new StreamReader(path_settings))
                 {
                     while (!reader.EndOfStream)
                     {
@@ -62,16 +69,19 @@ namespace Optimeet
                     }
                 }
             }
-            catch(FileNotFoundException)
+            catch (Exception e) when (e is FileNotFoundException || e is DirectoryNotFoundException)
             {
                 //Name, [minimum, default, maximum, frequency(tick)]
-                Settings.Add(SETTING_1, new int[] { 3, 5, 15, 1});
-                Settings.Add(SETTING_2, new int[] { 300, 800, 5000, 100});
-                Settings.Add(SETTING_3, new int[] { 30, 60, 300, 30});
+                Settings.Add(SETTING_1, new int[] { 3, 5, 15, 1 });
+                Settings.Add(SETTING_2, new int[] { 300, 800, 5000, 100 });
+                Settings.Add(SETTING_3, new int[] { 30, 60, 300, 30 });
+                Settings.Add(SETTING_4, new int[] { 1, 2, 8, 1 });
                 SaveSettings();
             }
         }
-
+        /// <summary>
+        /// Saves the settings to settings.csv
+        /// </summary>
         public void SaveSettings()
         {
             if (!Directory.Exists(path_meetings))
@@ -83,13 +93,15 @@ namespace Optimeet
             string csv = string.Join(Environment.NewLine, Settings.Select(d => $"{d.Key},{d.Value[0]},{d.Value[1]},{d.Value[2]},{d.Value[3]}"));
             File.WriteAllText(path_settings, csv);
         }
-
-    private void LoadContacts()
+        /// <summary>
+        /// Loads the contacts from contacts.csv file
+        /// </summary>
+        private void LoadContacts()
         {
             if (File.Exists(path_contacts))
             {
                 var fileStream = new FileStream(path_contacts, FileMode.Open);
-                var reader = XmlDictionaryReader.CreateTextReader(fileStream, new XmlDictionaryReaderQuotas() { MaxDepth = 200});
+                var reader = XmlDictionaryReader.CreateTextReader(fileStream, new XmlDictionaryReaderQuotas() { MaxDepth = 200 });
                 var serializer = new DataContractSerializer(typeof(Trie<Contact>));
                 Trie<Contact> serializableObject = (Trie<Contact>)serializer.ReadObject(reader, true);
                 reader.Close();
@@ -98,6 +110,9 @@ namespace Optimeet
             }
             else Contacts = new Trie<Contact>();
         }
+        /// <summary>
+        /// Saves the contacts to contacts.csv
+        /// </summary>
         public void SaveContacts()
         {
             var serializer = new DataContractSerializer(typeof(Trie<Contact>));
@@ -105,10 +120,10 @@ namespace Optimeet
             {
                 Indent = true,
                 IndentChars = "\t",
-                
+
             };
             if (!Directory.Exists(path_contacts))
-            { 
+            {
                 string[] splits = path_contacts.Split('\\');
                 string rootpath = path_contacts.Substring(0, path_contacts.Length - splits[splits.Length - 1].Length);
                 Directory.CreateDirectory(rootpath);
@@ -117,6 +132,9 @@ namespace Optimeet
             serializer.WriteObject(writer, Contacts);
             writer.Close();
         }
+        /// <summary>
+        /// Loads the meetings from meetings.csv file
+        /// </summary>
         private void LoadMeetings()
         {
             if (File.Exists(path_meetings))
@@ -131,8 +149,9 @@ namespace Optimeet
             }
             else Meetings = new SortedSet<Meeting>(new MeetingComparer());
         }
-
-
+        /// <summary>
+        /// Saves the meetings to meetings.csv
+        /// </summary>
         public void SaveMeetings()
         {
             var serializer = new DataContractSerializer(typeof(SortedSet<Meeting>));
@@ -150,15 +169,6 @@ namespace Optimeet
             var writer = XmlWriter.Create(path_meetings, settings);
             serializer.WriteObject(writer, Meetings);
             writer.Close();
-        }      
-    }
-
-    internal class MeetingComparer : IComparer<Meeting>
-    {
-        public int Compare(Meeting m1, Meeting m2)
-        {
-            //Compares two meetings by date
-            return DateTime.Compare(m1.GetMeetingDate(), m2.GetMeetingDate());
         }
     }
 }
