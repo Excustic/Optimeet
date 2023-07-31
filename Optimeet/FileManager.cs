@@ -18,6 +18,8 @@ namespace Optimeet
         Environment.SpecialFolder.MyDoc‌​uments), "Optimeet", "meetings.xml");
         readonly string path_settings = Path.Combine(Environment.GetFolderPath(
         Environment.SpecialFolder.MyDoc‌​uments), "Optimeet", "settings.csv");
+        public static readonly string path_keys = Path.Combine(Environment.GetFolderPath(
+        Environment.SpecialFolder.MyDoc‌​uments), "Optimeet", "keys.json");
         public Trie<Contact> Contacts;
         public SortedSet<Meeting> Meetings;
         public Dictionary<string, int[]> Settings;
@@ -26,7 +28,6 @@ namespace Optimeet
         public const string SETTING_2 = "Search radius (metres)";
         public const string SETTING_3 = "Meeting duration (minutes)";
         public const string SETTING_4 = "Define upcoming meetings deadline (weeks)";
-        public const string path_keys = "keys.json";
         private FileManager()
         {
             LoadContacts();

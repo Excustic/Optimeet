@@ -66,9 +66,9 @@ namespace Optimeet
                     AutocompleteRequest += GKey;
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                MessageBox.Show("Could not load all map services because some keys are missing", "Error");
+                MessageBox.Show("Could not load all map services because some keys are missing: "+e.Message+". "+FileManager.path_keys, "Error");
             }
         }
         /// <summary>

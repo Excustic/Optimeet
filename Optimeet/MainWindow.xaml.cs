@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -40,7 +41,10 @@ namespace Optimeet
         //Google API variables
         private CalendarService service;
         private UserCredential credential;
-        private readonly string credPath = "token.json";
+        private readonly string secretsPath = Path.Combine(Environment.GetFolderPath(
+        Environment.SpecialFolder.MyDoc‌​uments), "Optimeet", "client_secrets.json");
+        private readonly string credPath = Path.Combine(Environment.GetFolderPath(
+        Environment.SpecialFolder.MyDoc‌​uments), "Optimeet", "token.json");
         //Used for picking a meeting location
         private Location FinalChoice; 
         private Location CreateContactLocation; //Used for saving a new contact
@@ -1326,9 +1330,10 @@ namespace Optimeet
             {
                 try
                 {
-                    DirectoryInfo dir = new DirectoryInfo(Environment.CurrentDirectory);
+                    DirectoryInfo dir = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(
+                        Environment.SpecialFolder.MyDoc‌​uments), "Optimeet"));
                     foreach (var subDir in dir.GetDirectories())
-                        if (subDir.Name.Equals(credPath))
+                        if (subDir.Name.Equals("t"+credPath.Split('t')[credPath.Split('t').Length-1]))
                         {
                             subDir.Attributes = FileAttributes.Normal;
                             subDir.Delete(true);
@@ -1352,7 +1357,7 @@ namespace Optimeet
                 try
                 {
                     //Retrieve Google OAuth2.0 secret keys
-                    using (var stream = new FileStream("../../client_secrets.json", FileMode.Open, FileAccess.Read))
+                    using (var stream = new FileStream(secretsPath, FileMode.Open, FileAccess.Read))
                     {
                         var flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
                         {
@@ -1382,7 +1387,7 @@ namespace Optimeet
                     if (b == null)
                         return;
                     //User sign attempt --> Create new user --> log in to service
-                    using (var stream = new FileStream("../../client_secrets.json", FileMode.Open, FileAccess.Read))
+                    using (var stream = new FileStream(secretsPath, FileMode.Open, FileAccess.Read))
                     {
                         credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
                             GoogleClientSecrets.FromStream(stream).Secrets,
