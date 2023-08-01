@@ -20,7 +20,7 @@ great opportunity to learn how to make an executable desktop program with an int
 + Optimal location search algorithm based on participants' location
 + View and delete your past, upcoming and future meetings
 + View, add, edit, search and delete contacts through a contact book
-+ Adjust application settings in a destinated settings menu
++ Adjust application settings in a designated settings menu
 + Invite people to meetings using Google Calendar via signing into a Google account with OAuth 2.0 ID Client
 
 ## How the algorithm works 
