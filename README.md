@@ -58,7 +58,7 @@ Switching the coefficient of _e_ we finally get an expression which will give us
 Suppose there are 4 people who live in the outskirts of london, and another person who lives far away from London in Birmingham.
 
 If a simple centroid calculation were applied, the red dot would've been the suggested meeting spot for everyone which is situated somewhere at Watford - which honestly would waste everyone's time and isn't the best geographical place either.
-Using the weights method, we get a more reasonable spot marked by the green dot around the north-eastern outskirts. An improvement to be sure, which also turns out to be more accessible for the person who lives in birmingham! 
+Using the weights method, we get a more reasonable spot marked by the green dot not too far from London's centre. An improvement to be sure, which also turns out to be more accessible for the person who lives in birmingham! 
 
 You can fact check me.
 
