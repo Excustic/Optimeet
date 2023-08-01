@@ -33,8 +33,6 @@ great opportunity to learn how to make an executable desktop program with an int
 
 *N* - number of points
 
-*A* - Arithmetic mean
-
 *a* - mean of points
 
 *𝞂* - standard deviation
