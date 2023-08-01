@@ -580,6 +580,8 @@ namespace Optimeet
         private void LoadMeetingsUI()
         {
             SortedSet<Meeting> MeetingSet = fm.Meetings;
+            if (MeetingSet.Count == 0)
+                return;
             //Division to 3 queues of meetings
             Queue<Meeting> UpcomingMeetings = new Queue<Meeting>(),
                 FutureMeetings = new Queue<Meeting>(),
