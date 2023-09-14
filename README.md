@@ -25,7 +25,7 @@ great opportunity to learn how to make an executable desktop program with an int
 
 ## How the algorithm works 
 
-**Problem definition** - *For a set of N  XY-points, calculate the weighted centroid.*
+**Problem definition** - *For a set of N  XY points, calculate the weighted centroid.*
 
 ### Method
 
@@ -49,18 +49,18 @@ And writing our weights as Gaussian distribution function:
 
 ![image](https://github.com/Excustic/Optimeet/assets/47672175/fb846162-2f5f-4e84-ba1b-7a14ceeef295)
 
-Switching the coefficient of _e_ we finally get an expression which will give us coordinates that are calculated with more bias towards the central points, this will achieve a stable centroid that won't be compromised by outlier points.
+Switching the coefficient of _e_ we finally get an expression which will give us coordinates that are calculated with more bias towards the central points, this will achieve a stable centroid that outlier points won't compromise.
 
 ![image](https://github.com/Excustic/Optimeet/assets/47672175/a4ceaf3d-7d61-46ac-ac3c-5ae827f8c069)
 
-### Example of real world situation of the algorithm's application against a regular centroid
+### Example of a real-world situation of the algorithm's application against a regular centroid
 
-Suppose there are 4 people who live in the outskirts of london, and another person who lives far away from London in Birmingham.
+Suppose there are 4 people who live on the outskirts of London and another person who lives far away from London in Birmingham.
 
 If a simple centroid calculation were applied, the red dot would've been the suggested meeting spot for everyone which is situated somewhere at Watford - which honestly would waste everyone's time and isn't the best geographical place either.
-Using the weights method, we get a more reasonable spot marked by the green dot not too far from London's centre. An improvement to be sure, which also turns out to be more accessible for the person who lives in birmingham! 
+Using the weights method, we get a more reasonable spot marked by the green dot not too far from London's centre. An improvement to be sure, which also turns out to be more accessible for the person who lives in Birmingham! 
 
-You can fact check me.
+You can fact-check me.
 
 ![WeightedCentroid](https://github.com/Excustic/Optimeet/assets/47672175/fd340f4c-3f23-4a5a-9559-ac9d3dd5c397)
 
@@ -81,16 +81,13 @@ _Creating the essential API keys and credentials_
 3. Open the project's dashboard and go to the APIs and services section
 4. Enable Maps API service
 5. Return to APIs and services and go to the Credentials section
-6. Create a new OAuth ClientID and a consent screen adding a tester mail, choose Desktop App, input 'Optimeet' in the name form and click Create. When you're done visit the APIs and keys section again and you'll see your OAuth 2.0 Client ID, download it and save it on your local computer.
+6. Create a new OAuth ClientID and a consent screen by adding a tester mail, choose Desktop App, input 'Optimeet' in the name form and click Create. When you're done visit the APIs and keys section again and you'll see your OAuth 2.0 Client ID, download it and save it on your local computer.
 7. Create a new account at [https://positionstack.com/](https://positionstack.com/)
 8. Generate an API key for free.
-_Storing the credentials on your local computer_ 
-After you've finished creating all of the essential keys and credentials, go to your documents folder and create a new folder named 'Optimeet'. In that folder put your client_secrets.json (make sure that is the name of the file) that you've downloaded previously, and create a new JSON file called 'keys.json'. Open keys.json and input the following: 
-```
-{
-  "ApiKey": "YOUR_POSITIONSTACK_API_HERE",
-  "GKey": "YOUR_GOOGLEMAPS_API_HERE"
-}
-```
-You're all set! If you run into any additional issues don't hesitate to open up a new issue in the repository.
+9. Generate a Bing Maps key following [these quick steps](https://learn.microsoft.com/en-us/bingmaps/getting-started/bing-maps-dev-center-help/getting-a-bing-maps-key)
+    
+_Storing the credentials on your local application_ 
+
+After you've finished creating all of the essential keys and credentials, open the application and travel to the settings menu. You can input the needed keys and the OAuth JSON's full path. 
+You're all set! Don't hesitate to open up a new issue in the repository if you run into any additional issues.
 
