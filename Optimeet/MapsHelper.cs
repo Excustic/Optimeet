@@ -40,36 +40,21 @@ namespace Optimeet
             if (_instance == null)
             {
                 _instance = new MapsHelper();
-                Initialzie();
+                Initialize();
             }
             return _instance;
         }
         /// <summary>
         /// Gets the API keys from the stored file and appends them to the url strings
         /// </summary>
-        private static void Initialzie()
+        private static void Initialize()
         {
-            try
-            {
-                using (var reader = new StreamReader(FileManager.path_keys))
-                {
-                    while (!reader.EndOfStream)
-                    {
-                        var data = reader.ReadToEnd();
-                        JObject file = JsonConvert.DeserializeObject<JObject>(data);
-                        ApiKey = file["ApiKey"].ToString();
-                        GKey = file["GKey"].ToString();
-                    }
-                    baseUrlGC += GKey;
-                    baseUrlPR += GKey;
-                    baseUrlPhotoRequest += GKey;
-                    AutocompleteRequest += GKey;
-                }
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show("Could not load all map services because some keys are missing: "+e.Message+". "+FileManager.path_keys, "Error");
-            }
+            GKey = FileManager.GetInstance().Keys[FileManager.KEY_1];
+            ApiKey = FileManager.GetInstance().Keys[FileManager.KEY_2];
+            baseUrlGC += GKey;
+            baseUrlPR += GKey;
+            baseUrlPhotoRequest += GKey;
+            AutocompleteRequest += GKey;
         }
         /// <summary>
         /// Converts an address into a WGS84 coordinates

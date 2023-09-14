@@ -13,11 +13,13 @@ namespace Optimeet
     public sealed class FileManager
     {
         readonly string path_contacts = Path.Combine(Environment.GetFolderPath(
-        Environment.SpecialFolder.MyDoc‌​uments), "Optimeet", "contacts.xml");
+            Environment.SpecialFolder.MyDoc‌​uments), "Optimeet", "contacts.xml");
         readonly string path_meetings = Path.Combine(Environment.GetFolderPath(
-        Environment.SpecialFolder.MyDoc‌​uments), "Optimeet", "meetings.xml");
+            Environment.SpecialFolder.MyDoc‌​uments), "Optimeet", "meetings.xml");
         readonly string path_settings = Path.Combine(Environment.GetFolderPath(
-        Environment.SpecialFolder.MyDoc‌​uments), "Optimeet", "settings.csv");
+            Environment.SpecialFolder.MyDoc‌​uments), "Optimeet", "settings.csv");
+        readonly string path_keysCSV = Path.Combine(Environment.GetFolderPath(
+            Environment.SpecialFolder.MyDocuments), "Optimeet", "keys.csv");
         public static readonly string path_keys = Path.Combine(Environment.GetFolderPath(
         Environment.SpecialFolder.MyDoc‌​uments), "Optimeet", "keys.json");
         public Trie<Contact> Contacts;
@@ -28,11 +30,19 @@ namespace Optimeet
         public const string SETTING_2 = "Search radius (metres)";
         public const string SETTING_3 = "Meeting duration (minutes)";
         public const string SETTING_4 = "Define upcoming meetings deadline (weeks)";
+        public const string KEY_0 = "Bing maps key";
+        public const string KEY_1 = "Google Places API key";
+        public const string KEY_2 = "PositionStack API key";
+        public const string KEY_3 = "OAuth credentials json directory address";
+
+        public Dictionary<string, string> Keys { get; private set; }
+
         private FileManager()
         {
             LoadContacts();
             LoadMeetings();
             LoadSettings();
+            LoadKeys();
         }
         /// <summary>
         /// Initiates the singleton object
@@ -46,7 +56,6 @@ namespace Optimeet
             }
             return _instance;
         }
-
         /// <summary>
         /// Loads the settings from settings.csv file
         /// </summary>
@@ -87,12 +96,53 @@ namespace Optimeet
         {
             if (!Directory.Exists(path_meetings))
             {
-                string[] splits = path_meetings.Split('\\');
-                string rootpath = path_meetings.Substring(0, path_meetings.Length - splits[splits.Length - 1].Length);
+                string[] splits = path_settings.Split('\\');
+                string rootpath = path_settings.Substring(0, path_settings.Length - splits[splits.Length - 1].Length);
                 Directory.CreateDirectory(rootpath);
             }
             string csv = string.Join(Environment.NewLine, Settings.Select(d => $"{d.Key},{d.Value[0]},{d.Value[1]},{d.Value[2]},{d.Value[3]}"));
             File.WriteAllText(path_settings, csv);
+        }
+        /// <summary>
+        /// Loads the settings from settings.csv file
+        /// </summary>
+        private void LoadKeys()
+        {
+            Keys = new Dictionary<string, string>();
+            try
+            {
+                using (var reader = new StreamReader(path_keysCSV))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var values = line.Split(',');
+                        Keys.Add(values[0], values[1]);
+                    }
+                }
+            }
+            catch (Exception e) when (e is FileNotFoundException || e is DirectoryNotFoundException)
+            {
+                Keys.Add(KEY_0, "");
+                Keys.Add(KEY_1, "");
+                Keys.Add(KEY_2, "");
+                Keys.Add(KEY_3, "");
+                SaveKeys();
+            }
+        }
+        /// <summary>
+        /// Saves the keys to keys.csv
+        /// </summary>
+        public void SaveKeys()
+        {
+            if (!Directory.Exists(path_meetings))
+            {
+                string[] splits = path_keysCSV.Split('\\');
+                string rootpath = path_keysCSV.Substring(0, path_keysCSV.Length - splits[splits.Length - 1].Length);
+                Directory.CreateDirectory(rootpath);
+            }
+            string csv = string.Join(Environment.NewLine, Keys.Select(d => $"{d.Key},{d.Value}"));
+            File.WriteAllText(path_keysCSV, csv);
         }
         /// <summary>
         /// Loads the contacts from contacts.csv file

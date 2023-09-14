@@ -10,6 +10,7 @@ using Microsoft.Maps.MapControl.WPF;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NodaTime;
+using Optimeet.Properties;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -41,10 +42,8 @@ namespace Optimeet
         //Google API variables
         private CalendarService service;
         private UserCredential credential;
-        private readonly string secretsPath = Path.Combine(Environment.GetFolderPath(
-        Environment.SpecialFolder.MyDoc‌​uments), "Optimeet", "client_secrets.json");
         private readonly string credPath = Path.Combine(Environment.GetFolderPath(
-        Environment.SpecialFolder.MyDoc‌​uments), "Optimeet", "token.json");
+            Environment.SpecialFolder.MyDoc‌​uments), "Optimeet", "token.json");
         //Used for picking a meeting location
         private Location FinalChoice; 
         private Location CreateContactLocation; //Used for saving a new contact
@@ -53,10 +52,11 @@ namespace Optimeet
         {
             InitializeComponent();
             //Initialize singleton objects
-            helper = MapsHelper.GetInstance();
             fm = FileManager.GetInstance();
+            helper = MapsHelper.GetInstance();
             //Create map UI layer
             mapLayer = new MapLayer();
+            ApplicationMap.CredentialsProvider = new ApplicationIdCredentialsProvider(fm.Keys[FileManager.KEY_0]);
             ApplicationMap.Children.Add(mapLayer);
             ResetViews();
             //Preload all menus
@@ -1301,6 +1301,46 @@ namespace Optimeet
                 //Continue to next setting
                 count++;
             }
+            foreach (KeyValuePair<string, string> pair in fm.Keys)
+            {
+                //Settings Key name
+                TextBlock t = new TextBlock()
+                {
+                    Text = pair.Key,
+                    Margin = new Thickness(0, 10, 0, 0),
+                    TextWrapping = TextWrapping.WrapWithOverflow,
+                    Name = "block_" + count
+                };
+                //Textbox which represents the value
+                TextBox val = new TextBox()
+                {
+                    Text = pair.Value.ToString(),
+                    Width = 300,
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    TextAlignment = TextAlignment.Left,
+                    Name = "val_" + count,
+                    Tag = pair.Key
+                };
+                val.TextChanged += (object sender, TextChangedEventArgs args) =>
+                {
+                    fm.Keys[val.Tag.ToString()] = val.Text;
+                    fm.SaveKeys();
+                };
+                //A stack panel that acts as a wrapper object
+                StackPanel sp = new StackPanel()
+                {
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(10),
+                    Orientation = Orientation.Vertical,
+                };
+                //Wrap in stackpanel
+                sp.Children.Add(t);
+                sp.Children.Add(val);
+                // Add the elements to settings menu
+                SettingsMenu.Children.Add(sp);
+                //Continue to next setting key
+                count++;
+            }
         }
         /// <summary>
         /// Open or closes Settings menu
@@ -1359,7 +1399,7 @@ namespace Optimeet
                 try
                 {
                     //Retrieve Google OAuth2.0 secret keys
-                    using (var stream = new FileStream(secretsPath, FileMode.Open, FileAccess.Read))
+                    using (var stream = new FileStream(fm.Keys[FileManager.KEY_3], FileMode.Open, FileAccess.Read))
                     {
                         var flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
                         {
@@ -1389,7 +1429,7 @@ namespace Optimeet
                     if (b == null)
                         return;
                     //User sign attempt --> Create new user --> log in to service
-                    using (var stream = new FileStream(secretsPath, FileMode.Open, FileAccess.Read))
+                    using (var stream = new FileStream(fm.Keys[FileManager.KEY_3], FileMode.Open, FileAccess.Read))
                     {
                         credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
                             GoogleClientSecrets.FromStream(stream).Secrets,
@@ -1398,6 +1438,11 @@ namespace Optimeet
                             CancellationToken.None,
                             new FileDataStore(credPath, true));
                     }
+                }
+                catch (ArgumentException)
+                {
+                    //No client_secrets set
+                    MessageBox.Show("Please provide Oauth secret's directory in settings");
                 }
                 //Create the Google Calendar service
                 service = new CalendarService(new BaseClientService.Initializer()

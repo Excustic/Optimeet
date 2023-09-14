@@ -46,7 +46,7 @@
                     <DropShadowEffect Direction="250" BlurRadius="10" ShadowDepth="2"/>
                 </Rectangle.Effect>
             </Rectangle>
-            <m:Map Grid.Column="1" Grid.RowSpan="2" x:Name="ApplicationMap" Grid.IsSharedSizeScope="True" CredentialsProvider="4oUdxuNmhAKkfVowia1L~4voqLmANS1b8b6BGRoj3XA~AtcXDNfgrjV1BBWaBQ490TvRjTvJmh33G4wXmkz27TmkhiHE6jQ3-brbFjXdKIYc" Mode="Road" ZoomLevel="10" Panel.ZIndex="1">
+            <m:Map Grid.Column="1" Grid.RowSpan="2" x:Name="ApplicationMap" Grid.IsSharedSizeScope="True" CredentialsProvider="" Mode="Road" ZoomLevel="10" Panel.ZIndex="1">
                 <m:Map.Effect>
                     <DropShadowEffect BlurRadius="15" Direction="100" RenderingBias="Quality"/>
                 </m:Map.Effect>
